@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Student Accommodation Listings</h1>
+
+<div class="listing-grid">
+
+{% for listing in listings %}
+
+<div class="listing-card">
+
+    <div class="image-wrapper">
+
+    <img class="listing-image"
+         src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}">
+
+    <div class="image-gradient"></div>
+
+    <div class="price-badge">
+        £{{ listing['rent_pcm'] }} PCM
+    </div>
+
+    </div>
+
+
+
+    <div class="listing-body">
+
+        <a href="{{ url_for('listings.detail', id=listing['id']) }}">
+            <h3>{{ listing['title'] }}</h3>
+        </a>
+
+        <p class="city">{{ listing['city'] }}</p>
+
+        <p class="price">£{{ listing['rent_pcm'] }} PCM</p>
+
+    </div>
+
+</div>
+
+{% else %}
+
+<div class="empty-state">
+    <h3>No listings yet</h3>
+    <p>New student properties coming soon.</p>
+</div>
+
+{% endfor %}
+
+</div>
+
+
+{% endblock %}

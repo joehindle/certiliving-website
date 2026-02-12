@@ -1,0 +1,22 @@
+<h1>{{ listing['title'] }}</h1>
+
+<p>{{ listing['description'] }}</p>
+<p>{{ listing['city'] }}</p>
+<p>£{{ listing['rent_pcm'] }} PCM</p>
+
+<hr>
+
+<h2>Send Enquiry</h2>
+
+<form method="post">
+    <input name="name" placeholder="Your name" required>
+    <br><br>
+
+    <input name="email" placeholder="Your email" required>
+    <br><br>
+
+    <textarea name="message" placeholder="Message"></textarea>
+    <br><br>
+
+    <button type="submit">Send Enquiry</button>
+</form>
