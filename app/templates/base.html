@@ -8,11 +8,25 @@
 <body>
 
 <header class="navbar">
-    <h1>CertiLiving</h1>
-    <nav>
-        <a href="/listings">Listings</a>
+  <div class="nav-inner">
+
+    <!-- TEXT LOGO -->
+    <a class="brand" href="{{ url_for('listings.index') }}">
+      <span class="brand-certi">Certi</span>
+      <span class="brand-living">Living</span>
+    </a>
+
+    <!-- NAV LINKS -->
+    <nav class="nav-links">
+      <a href="#">About</a>
+      <a href="#">How It Works</a>
+      <a href="{{ url_for('listings.index') }}">Listings</a>
+      <a href="#">Contact</a>
     </nav>
+
+  </div>
 </header>
+
 
 <main class="container">
     {% block content %}{% endblock %}

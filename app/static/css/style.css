@@ -4,11 +4,62 @@ body {
     background: #f6f7fb;
 }
 
+/* NAVBAR CONTAINER */
 .navbar {
-    background: #1f2937;
-    color: white;
-    padding: 15px 30px;
+  background: white;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
 }
+
+/* INNER WIDTH + FLEX */
+.nav-inner {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 18px 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* LOGO TEXT */
+.brand {
+  text-decoration: none;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+}
+
+/* Certi part */
+.brand-certi {
+  color: #111827;
+}
+
+/* Living part (green accent) */
+.brand-living {
+  color: #22c55e;
+  margin-left: 2px;
+}
+
+/* NAV LINKS RIGHT SIDE */
+.nav-links {
+  display: flex;
+  gap: 36px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #111827;
+  font-weight: 600;
+  font-size: 15px;
+  opacity: 0.85;
+  transition: all 0.15s ease;
+}
+
+.nav-links a:hover {
+  color: #22c55e;
+  opacity: 1;
+}
+
 
 .container {
     padding: 40px;

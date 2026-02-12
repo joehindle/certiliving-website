@@ -1,4 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+
 <h1>{{ listing['title'] }}</h1>
+
+<img src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}">
 
 <p>{{ listing['description'] }}</p>
 <p>{{ listing['city'] }}</p>
@@ -20,3 +26,5 @@
 
     <button type="submit">Send Enquiry</button>
 </form>
+
+{% endblock %}
