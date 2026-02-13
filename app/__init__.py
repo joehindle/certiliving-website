@@ -10,6 +10,7 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
+        ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD", "change-me"),
     )
 
     if test_config is None:
@@ -27,5 +28,8 @@ def create_app(test_config=None):
 
     from . import listings
     app.register_blueprint(listings.bp)
+
+    from . import admin
+    app.register_blueprint(admin.bp)
 
     return app

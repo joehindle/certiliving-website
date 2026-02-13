@@ -1,30 +1,70 @@
 {% extends "base.html" %}
-
 {% block content %}
+<div class="container detail-page">
 
-<h1>{{ listing['title'] }}</h1>
+<a class="back-link" href="{{ url_for('listings.index') }}">← Back to listings</a>
 
-<img src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}">
+<div class="detail-grid">
 
-<p>{{ listing['description'] }}</p>
-<p>{{ listing['city'] }}</p>
-<p>£{{ listing['rent_pcm'] }} PCM</p>
+  <!-- LEFT: listing content -->
+  <section class="detail-main">
 
-<hr>
+    <div class="detail-hero">
+      <img class="detail-image"
+           src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/900x600' }}"
+           alt="{{ listing['title'] }}">
+      <div class="detail-hero-gradient"></div>
+      <div class="detail-price-badge">£{{ listing['rent_pcm'] }} PCM</div>
+    </div>
 
-<h2>Send Enquiry</h2>
+    <div class="detail-card">
+      <h1 class="detail-title">{{ listing['title'] }}</h1>
+      <p class="detail-subtitle">{{ listing['city'] }}</p>
 
-<form method="post">
-    <input name="name" placeholder="Your name" required>
-    <br><br>
+      <div class="detail-meta">
+        <div class="meta-pill">Room: {{ listing['room_type'] if listing['room_type'] else 'N/A' }}</div>
+        <div class="meta-pill">
+          Bills: {{ 'Included' if listing['bills_included'] else 'Not included' }}
+        </div>
+        <div class="meta-pill">
+          Available: {{ listing['available_from'] if listing['available_from'] else 'N/A' }}
+        </div>
+      </div>
 
-    <input name="email" placeholder="Your email" required>
-    <br><br>
+      <h2 class="section-title">Description</h2>
+      <p class="detail-desc">{{ listing['description'] }}</p>
+    </div>
 
-    <textarea name="message" placeholder="Message"></textarea>
-    <br><br>
+  </section>
 
-    <button type="submit">Send Enquiry</button>
-</form>
+  <!-- RIGHT: enquiry -->
+  <aside class="detail-aside">
+    <div class="enquiry-card">
+      <h2 class="section-title">Send Enquiry</h2>
+      <p class="enquiry-hint">We’ll forward your message to the accommodation contact.</p>
+
+      <form method="post" class="enquiry-form">
+        <label class="field">
+          <span>Your name</span>
+          <input name="name" placeholder="Joe Hindle" required>
+        </label>
+
+        <label class="field">
+          <span>Your email</span>
+          <input name="email" type="email" placeholder="joe@email.com" required>
+        </label>
+
+        <label class="field">
+          <span>Message</span>
+          <textarea name="message" rows="5" placeholder="Hi, is this still available? When can I view?"></textarea>
+        </label>
+
+        <button class="primary-btn" type="submit">Send Enquiry</button>
+      </form>
+    </div>
+  </aside>
+
+</div>
+</div>
 
 {% endblock %}

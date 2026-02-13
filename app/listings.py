@@ -6,7 +6,7 @@ from werkzeug.exceptions import abort
 
 from .db import get_db
 
-bp = Blueprint('listings',__name__, url_prefix='/listings')
+bp = Blueprint('listings', __name__)
 
 @bp.route('/')
 def index():
@@ -17,7 +17,7 @@ def index():
 
     return render_template('listings/index.html', listings=listings)
 
-@bp.route('/<int:id>', methods=('GET', 'POST'))
+@bp.route('/listings/<int:id>', methods=('GET', 'POST'))
 def detail(id):
     db = get_db()
 

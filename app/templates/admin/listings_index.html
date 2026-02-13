@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
+  <h1>Admin: Listings</h1>
+  <div>
+    <a href="{{ url_for('admin.listings_new') }}">+ New listing</a>
+    &nbsp;|&nbsp;
+    <a href="{{ url_for('admin.logout') }}">Logout</a>
+  </div>
+</div>
+
+<table border="1" cellpadding="8" cellspacing="0" style="width:100%; background:white;">
+  <tr>
+    <th>Title</th><th>City</th><th>Rent</th><th>Actions</th>
+  </tr>
+  {% for l in listings %}
+  <tr>
+    <td>{{ l['title'] }}</td>
+    <td>{{ l['city'] }}</td>
+    <td>£{{ l['rent_pcm'] }}</td>
+    <td>
+      <a href="{{ url_for('admin.listings_edit', id=l['id']) }}">Edit</a>
+      <form method="post" action="{{ url_for('admin.listings_delete', id=l['id']) }}" style="display:inline;">
+        <button type="submit" onclick="return confirm('Delete this listing?')">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+{% endblock %}

@@ -2,53 +2,169 @@
 
 {% block content %}
 
-<h1>Student Accommodation Listings</h1>
+<!-- HERO SECTION -->
+<section class="hero-full">
 
-<div class="listing-grid">
+  <div class="container-tight hero-content">
 
-{% for listing in listings %}
+    <h1>Student Housing Made Simple, Safe & Transparent</h1>
 
-<div class="listing-card">
+    <p>
+      Browse verified student accommodation across UK university cities.
+      Compare options and contact providers directly.
+    </p>
 
-    <div class="image-wrapper">
+    <a href="{{ url_for('listings.index') }}#listings" class="btn-primary">
+      Browse Listings
+    </a>
 
-    <img class="listing-image"
-         src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}">
+  </div>
 
-    <div class="image-gradient"></div>
+</section>
 
-    <div class="price-badge">
-        £{{ listing['rent_pcm'] }} PCM
+<main class="container">
+
+<div class="dash-divider"></div>
+
+<!-- WHY CERTILIVING (MIXED TEXT + FEATURE CARDS) -->
+<section class="section why-section">
+
+  <div class="why-text">
+    <h2>Why CertiLiving</h2>
+
+    <p class="why-lead">
+      Finding student housing shouldn’t be stressful. CertiLiving helps you
+      discover verified accommodation, compare options clearly, and contact
+      providers directly — no hidden steps.
+    </p>
+
+    <ul class="why-bullets">
+      <li>✔ Verified student accommodation providers</li>
+      <li>✔ Transparent pricing with no hidden fees</li>
+      <li>✔ Designed specifically for student housing needs</li>
+      <li>✔ Direct contact with accommodation providers</li>
+    </ul>
+  </div>
+
+  <div class="why-features">
+
+    <div class="feature-card">
+      <h3>Verified Listings</h3>
+      <p>We verify accommodation providers before showing listings.</p>
     </div>
 
+    <div class="feature-card">
+      <h3>Transparent Pricing</h3>
+      <p>No hidden fees. What you see is what you pay.</p>
     </div>
 
+  </div>
+
+</section>
+
+<div class="dash-divider"></div>
+
+<!-- HOW IT WORKS -->
+<section class="section alt-bg">
+    <h2>How It Works</h2>
+
+    <div class="info-grid">
+
+        <div class="info-card">
+            <h3>1️⃣ Browse Listings</h3>
+            <p>Explore real student accommodation near your university.</p>
+        </div>
+
+        <div class="info-card">
+            <h3>2️⃣ Compare Options</h3>
+            <p>Filter by price, room type, bills included and availability.</p>
+        </div>
+
+        <div class="info-card">
+            <h3>3️⃣ Contact Providers</h3>
+            <p>Send enquiries directly and secure your accommodation.</p>
+        </div>
+
+    </div>
+</section>
 
 
-    <div class="listing-body">
+<div class="dash-divider"></div>
 
-        <a href="{{ url_for('listings.detail', id=listing['id']) }}">
-            <h3>{{ listing['title'] }}</h3>
-        </a>
+<!-- LISTINGS -->
+<section id="listings" class="section">
+    <h2>Available Student Accommodation</h2>
 
-        <p class="city">{{ listing['city'] }}</p>
+    <div class="listing-grid">
 
-        <p class="price">£{{ listing['rent_pcm'] }} PCM</p>
+    {% for listing in listings %}
+
+    <div class="listing-card">
+
+        <div class="image-wrapper">
+
+            <img class="listing-image"
+                 src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}">
+
+            <div class="image-gradient"></div>
+
+            <div class="price-badge">
+                £{{ listing['rent_pcm'] }} PCM
+            </div>
+
+        </div>
+
+        <div class="listing-body">
+
+            <a href="{{ url_for('listings.detail', id=listing['id']) }}">
+                <h3>{{ listing['title'] }}</h3>
+            </a>
+
+            <p class="city">{{ listing['city'] }}</p>
+
+            <div class="badge-row">
+                {% if listing['room_type'] %}
+                    <span class="badge">{{ listing['room_type'] }}</span>
+                {% endif %}
+
+                {% if listing['bills_included'] %}
+                    <span class="badge badge-green">Bills Included</span>
+                {% endif %}
+
+                {% if listing['available_from'] %}
+                    <span class="badge badge-gray">
+                        Available {{ listing['available_from'] }}
+                    </span>
+                {% endif %}
+            </div>
+
+        </div>
 
     </div>
 
-</div>
+    {% else %}
 
-{% else %}
+    <div class="empty-state">
+        <h3>No listings yet</h3>
+        <p>New student properties coming soon.</p>
+    </div>
 
-<div class="empty-state">
-    <h3>No listings yet</h3>
-    <p>New student properties coming soon.</p>
-</div>
+    {% endfor %}
 
-{% endfor %}
+    </div>
+</section>
 
-</div>
+<div class="dash-divider"></div>
 
+<!-- PROVIDER CTA -->
+<section class="section alt-bg">
+    <h2>Are You A Student Accommodation Provider?</h2>
+    <p>
+        List your property and connect with students searching for housing.
+    </p>
+    <a href="#" class="btn-primary">List Your Property</a>
+</section>
+
+</main>
 
 {% endblock %}

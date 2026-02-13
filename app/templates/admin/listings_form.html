@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h1>{{ 'Edit' if listing else 'New' }} Listing</h1>
+
+<form method="post" style="display:grid; gap:10px; max-width:600px;">
+
+  <input name="title" placeholder="Title"
+         value="{{ listing['title'] if listing else '' }}" required>
+
+  <input name="city" placeholder="City"
+         value="{{ listing['city'] if listing else '' }}" required>
+
+  <input name="rent_pcm" type="number" placeholder="Rent PCM" required
+         value="{{ listing['rent_pcm'] if listing else '' }}">
+
+  <input name="photo_url" placeholder="Photo URL"
+         value="{{ listing['photo_url'] if listing and listing['photo_url'] not in (None, 'None', '') else '' }}">
+
+  <input name="room_type" placeholder="Room type (Ensuite/Studio/Shared)"
+         value="{{ listing['room_type'] if listing and listing['room_type'] not in (None, 'None', '') else '' }}">
+
+  <input name="available_from" type="date"
+         value="{{ listing['available_from'] if listing and listing['available_from'] not in (None, 'None', '') else '' }}">
+
+  <label>
+    <input type="checkbox" name="bills_included"
+           {% if listing and listing['bills_included'] %}checked{% endif %}>
+    Bills included
+  </label>
+
+  <textarea name="description" rows="6" placeholder="Description">{{
+    listing['description'] if listing and listing['description'] not in (None, 'None') else ''
+  }}</textarea>
+
+  <button type="submit">Save</button>
+  <a href="{{ url_for('admin.listings_index') }}">Cancel</a>
+
+</form>
+
+{% endblock %}
