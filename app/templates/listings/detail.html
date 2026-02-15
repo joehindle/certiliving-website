@@ -2,11 +2,10 @@
 {% block content %}
 <div class="container detail-page">
 
-<a class="back-link" href="{{ url_for('listings.index') }}">← Back to listings</a>
+<a class="back-link" href="{{ url_for('listings.index') }}">&larr; Back to listings</a>
 
 <div class="detail-grid">
 
-  <!-- LEFT: listing content -->
   <section class="detail-main">
 
     <div class="detail-hero">
@@ -14,7 +13,7 @@
            src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/900x600' }}"
            alt="{{ listing['title'] }}">
       <div class="detail-hero-gradient"></div>
-      <div class="detail-price-badge">£{{ listing['rent_pcm'] }} PCM</div>
+      <div class="detail-price-badge">&pound;{{ listing['rent_pcm'] }} PCM</div>
     </div>
 
     <div class="detail-card">
@@ -37,11 +36,10 @@
 
   </section>
 
-  <!-- RIGHT: enquiry -->
   <aside class="detail-aside">
     <div class="enquiry-card">
       <h2 class="section-title">Send Enquiry</h2>
-      <p class="enquiry-hint">We’ll forward your message to the accommodation contact.</p>
+      <p class="enquiry-hint">We'll forward your message to the accommodation contact.</p>
 
       <form method="post" class="enquiry-form">
         <label class="field">
@@ -56,7 +54,7 @@
 
         <label class="field">
           <span>Message</span>
-          <textarea name="message" rows="5" placeholder="Hi, is this still available? When can I view?"></textarea>
+          <textarea name="message" rows="5" placeholder="Hi, is this still available? When can I view?" required></textarea>
         </label>
 
         <button class="primary-btn" type="submit">Send Enquiry</button>

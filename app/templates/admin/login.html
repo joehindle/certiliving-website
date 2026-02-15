@@ -1,8 +1,10 @@
-{% extends "base.html" %}
+{% extends "admin/base.html" %}
 {% block content %}
-<h1>Staff Login</h1>
-<form method="post">
-  <input type="password" name="password" placeholder="Admin password" required>
-  <button type="submit">Login</button>
-</form>
+<div class="container admin-page">
+  <h1>Staff Login</h1>
+  <form method="post" class="admin-form">
+    <input type="password" name="password" placeholder="Admin password" required>
+    <button type="submit">Login</button>
+  </form>
+</div>
 {% endblock %}

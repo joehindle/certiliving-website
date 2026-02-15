@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, flash, g, redirect, render_template, request, url_for
+    Blueprint, flash, redirect, render_template, request, url_for
 )
 
 import re
@@ -10,6 +10,23 @@ from .db import get_db
 
 bp = Blueprint('listings', __name__)
 
+
+def _validate_enquiry_form(name, email, message):
+    if not name:
+        return "Name is required."
+    if not email:
+        return "Email is required."
+    if not message:
+        return "Message is required."
+    if len(name) > 100:
+        return "Name is too long."
+    if len(message) > 2000:
+        return "Message is too long."
+    if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return "Invalid email address."
+    return None
+
+
 @bp.route('/')
 def index():
     db = get_db()
@@ -19,17 +36,17 @@ def index():
 
     return render_template('listings/index.html', listings=listings)
 
-@bp.route('/listings/<int:id>', methods=('GET', 'POST'))
-def detail(id):
+@bp.route('/listings/<int:listing_id>', methods=('GET', 'POST'))
+def detail(listing_id):
     db = get_db()
 
     listing = db.execute(
         "SELECT * FROM listings WHERE id = ?",
-        (id,)
+        (listing_id,)
     ).fetchone()
 
     if listing is None:
-        return "Listing not found", 404
+        abort(404)
 
     # Handle enquiry form submission
     if request.method == 'POST':
@@ -37,25 +54,7 @@ def detail(id):
         email = request.form.get('email', '').strip()
         message = request.form.get('message', '').strip()
 
-        error = None
-
-        # ---------- REQUIRED ----------
-        if not name:
-            error = "Name is required."
-        elif not email:
-            error = "Email is required."
-        elif not message:
-            error = "Message is required."
-
-        # ---------- LENGTH ----------
-        elif len(name) > 100:
-            error = "Name is too long."
-        elif len(message) > 2000:
-            error = "Message is too long."
-
-        # ---------- EMAIL FORMAT ----------
-        elif not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            error = "Invalid email address."
+        error = _validate_enquiry_form(name, email, message)
 
         # ---------- IF ERROR ----------
         if error:
@@ -67,11 +66,11 @@ def detail(id):
                 (listing_id, student_name, student_email, message)
                 VALUES (?, ?, ?, ?)
                 """,
-                (id, name, email, message)
+                (listing_id, name, email, message)
             )
             db.commit()
 
             flash("Enquiry sent!", "success")
-            return redirect(url_for('listings.detail', id=id))
+            return redirect(url_for('listings.detail', listing_id=listing_id))
 
     return render_template('listings/detail.html', listing=listing)

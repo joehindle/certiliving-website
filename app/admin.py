@@ -1,11 +1,31 @@
 from functools import wraps
+
 from flask import Blueprint, current_app, request, session, redirect, url_for, render_template, flash
-from .db import get_db  
+from .db import get_db
 from .extensions import limiter
 import time
 
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
+
+
+def _clean_optional(value):
+    text = (value or "").strip()
+    return text or None
+
+
+def _parse_listing_form(form):
+    return {
+        "title": form["title"].strip(),
+        "city": form["city"].strip(),
+        "rent_pcm": form["rent_pcm"],
+        "photo_url": _clean_optional(form.get("photo_url")),
+        "room_type": _clean_optional(form.get("room_type")),
+        "bills_included": 1 if form.get("bills_included") == "on" else 0,
+        "available_from": _clean_optional(form.get("available_from")),
+        "description": (form.get("description") or "").strip(),
+    }
+
 
 def admin_required(view):
     @wraps(view)
@@ -49,60 +69,65 @@ def listings_index():
 @admin_required
 def listings_new():
     if request.method == "POST":
-        title = request.form["title"]
-        city = request.form["city"]
-        rent_pcm = request.form["rent_pcm"]
-        photo_url = request.form.get("photo_url") or None
-        room_type = request.form.get("room_type") or None
-        bills_included = 1 if request.form.get("bills_included") == "on" else 0
-        available_from = request.form.get("available_from") or None
-        description = request.form.get("description") or ""
+        listing_data = _parse_listing_form(request.form)
 
         db = get_db()
         db.execute(
             """INSERT INTO listings
                (title, city, rent_pcm, photo_url, room_type, bills_included, available_from, description)
                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (title, city, rent_pcm, photo_url, room_type, bills_included, available_from, description),
+            (
+                listing_data["title"],
+                listing_data["city"],
+                listing_data["rent_pcm"],
+                listing_data["photo_url"],
+                listing_data["room_type"],
+                listing_data["bills_included"],
+                listing_data["available_from"],
+                listing_data["description"],
+            ),
         )
         db.commit()
         return redirect(url_for("admin.listings_index"))
 
     return render_template("admin/listings_form.html", listing=None)
 
-@bp.route("/listings/<int:id>/edit", methods=("GET", "POST"))
+@bp.route("/listings/<int:listing_id>/edit", methods=("GET", "POST"))
 @admin_required
-def listings_edit(id):
+def listings_edit(listing_id):
     db = get_db()
-    listing = db.execute("SELECT * FROM listings WHERE id = ?", (id,)).fetchone()
+    listing = db.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
     if listing is None:
         return "Not found", 404
 
     if request.method == "POST":
-        title = request.form["title"]
-        city = request.form["city"]
-        rent_pcm = request.form["rent_pcm"]
-        photo_url = request.form.get("photo_url") or None
-        room_type = request.form.get("room_type") or None
-        bills_included = 1 if request.form.get("bills_included") == "on" else 0
-        available_from = request.form.get("available_from") or None
-        description = request.form.get("description") or ""
+        listing_data = _parse_listing_form(request.form)
 
         db.execute(
             """UPDATE listings
                SET title=?, city=?, rent_pcm=?, photo_url=?, room_type=?, bills_included=?, available_from=?, description=?
                WHERE id=?""",
-            (title, city, rent_pcm, photo_url, room_type, bills_included, available_from, description, id),
+            (
+                listing_data["title"],
+                listing_data["city"],
+                listing_data["rent_pcm"],
+                listing_data["photo_url"],
+                listing_data["room_type"],
+                listing_data["bills_included"],
+                listing_data["available_from"],
+                listing_data["description"],
+                listing_id,
+            ),
         )
         db.commit()
         return redirect(url_for("admin.listings_index"))
 
     return render_template("admin/listings_form.html", listing=listing)
 
-@bp.route("/listings/<int:id>/delete", methods=("POST",))
+@bp.route("/listings/<int:listing_id>/delete", methods=("POST",))
 @admin_required
-def listings_delete(id):
+def listings_delete(listing_id):
     db = get_db()
-    db.execute("DELETE FROM listings WHERE id = ?", (id,))
+    db.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
     db.commit()
     return redirect(url_for("admin.listings_index"))

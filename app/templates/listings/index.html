@@ -2,12 +2,11 @@
 
 {% block content %}
 
-<!-- HERO SECTION -->
 <section class="hero-full">
 
   <div class="container-tight hero-content">
 
-    <h1>Student Housing Made Simple, Safe & Transparent</h1>
+    <h1>Student Housing Made Simple, Safe and Transparent</h1>
 
     <p>
       Browse verified student accommodation across UK university cities.
@@ -22,27 +21,26 @@
 
 </section>
 
-<main class="container">
+<div class="container page-content">
 
 <div class="dash-divider"></div>
 
-<!-- WHY CERTILIVING (MIXED TEXT + FEATURE CARDS) -->
-<section class="section why-section">
+<section id="why" class="section why-section">
 
   <div class="why-text">
     <h2>Why CertiLiving</h2>
 
     <p class="why-lead">
-      Finding student housing shouldn’t be stressful. CertiLiving helps you
+      Finding student housing should not be stressful. CertiLiving helps you
       discover verified accommodation, compare options clearly, and contact
-      providers directly — no hidden steps.
+      providers directly with no hidden steps.
     </p>
 
     <ul class="why-bullets">
-      <li>✔ Verified student accommodation providers</li>
-      <li>✔ Transparent pricing with no hidden fees</li>
-      <li>✔ Designed specifically for student housing needs</li>
-      <li>✔ Direct contact with accommodation providers</li>
+      <li>&#10003; Verified student accommodation providers</li>
+      <li>&#10003; Transparent pricing with no hidden fees</li>
+      <li>&#10003; Designed specifically for student housing needs</li>
+      <li>&#10003; Direct contact with accommodation providers</li>
     </ul>
   </div>
 
@@ -64,24 +62,23 @@
 
 <div class="dash-divider"></div>
 
-<!-- HOW IT WORKS -->
-<section class="section alt-bg">
+<section id="how" class="section alt-bg">
     <h2>How It Works</h2>
 
     <div class="info-grid">
 
         <div class="info-card">
-            <h3>1️⃣ Browse Listings</h3>
+            <h3>1. Browse Listings</h3>
             <p>Explore real student accommodation near your university.</p>
         </div>
 
         <div class="info-card">
-            <h3>2️⃣ Compare Options</h3>
+            <h3>2. Compare Options</h3>
             <p>Filter by price, room type, bills included and availability.</p>
         </div>
 
         <div class="info-card">
-            <h3>3️⃣ Contact Providers</h3>
+            <h3>3. Contact Providers</h3>
             <p>Send enquiries directly and secure your accommodation.</p>
         </div>
 
@@ -91,7 +88,6 @@
 
 <div class="dash-divider"></div>
 
-<!-- LISTINGS -->
 <section id="listings" class="section">
     <h2>Available Student Accommodation</h2>
 
@@ -104,19 +100,20 @@
         <div class="image-wrapper">
 
             <img class="listing-image"
-                 src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}">
+                 src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}"
+                 alt="{{ listing['title'] }}">
 
             <div class="image-gradient"></div>
 
             <div class="price-badge">
-                £{{ listing['rent_pcm'] }} PCM
+                &pound;{{ listing['rent_pcm'] }} PCM
             </div>
 
         </div>
 
         <div class="listing-body">
 
-            <a href="{{ url_for('listings.detail', id=listing['id']) }}">
+            <a href="{{ url_for('listings.detail', listing_id=listing['id']) }}">
                 <h3>{{ listing['title'] }}</h3>
             </a>
 
@@ -156,8 +153,7 @@
 
 <div class="dash-divider"></div>
 
-<!-- PROVIDER CTA -->
-<section class="section alt-bg">
+<section id="contact" class="section alt-bg">
     <h2>Are You A Student Accommodation Provider?</h2>
     <p>
         List your property and connect with students searching for housing.
@@ -165,6 +161,6 @@
     <a href="#" class="btn-primary">List Your Property</a>
 </section>
 
-</main>
+</div>
 
 {% endblock %}

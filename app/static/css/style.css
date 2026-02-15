@@ -420,7 +420,7 @@ main { flex: 1; }
 }
 
 /* Tighten bottom spacing after the final content section above the footer. */
-main.container > .section:last-of-type {
+.container.page-content > .section:last-of-type {
   margin-bottom: 24px;
 }
 

@@ -1,0 +1,70 @@
+.admin-page {
+  max-width: 960px;
+}
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.admin-table th,
+.admin-table td {
+  text-align: left;
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.admin-form {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+}
+
+.admin-form-wide {
+  max-width: 600px;
+}
+
+.admin-form input,
+.admin-form textarea,
+.admin-form button {
+  font: inherit;
+}
+
+.admin-form input,
+.admin-form textarea {
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.admin-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-row-actions form {
+  margin: 0;
+}

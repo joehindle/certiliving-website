@@ -33,7 +33,7 @@ CREATE TABLE enquiries (
     listing_id INTEGER NOT NULL,
     student_name TEXT NOT NULL,
     student_email TEXT NOT NULL,
-    message TEXT,
+    message TEXT NOT NULL,
 
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

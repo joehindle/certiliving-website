@@ -3,6 +3,7 @@
 <head>
     <title>CertiLiving</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
 </head>
 
 <body>
@@ -39,7 +40,7 @@
 
 <footer class="site-footer">
   <div class="footer-inner">
-    © 2026 CertiLiving. All rights reserved.
+    &copy; 2026 CertiLiving. All rights reserved.
   </div>
 </footer>
 
