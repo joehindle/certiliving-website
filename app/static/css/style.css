@@ -462,3 +462,23 @@ main.container > .section:last-of-type {
 }
 
 .feature-card h3 { margin: 0; }
+
+.flash-container {
+  margin-bottom: 20px;
+}
+
+.flash {
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.flash.success {
+  background: #ecfdf5;
+  color: #065f46;
+}
+
+.flash.error {
+  background: #fef2f2;
+  color: #991b1b;
+}
