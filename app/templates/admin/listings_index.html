@@ -6,7 +6,10 @@
     <h1>Admin: Listings</h1>
     <div class="admin-actions">
       <a href="{{ url_for('admin.listings_new') }}">+ New listing</a>
-      <a href="{{ url_for('admin.logout') }}">Logout</a>
+      <form method="post" action="{{ url_for('admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit">Logout</button>
+      </form>
     </div>
   </div>
 
@@ -22,6 +25,7 @@
       <td class="admin-row-actions">
         <a href="{{ url_for('admin.listings_edit', listing_id=l['id']) }}">Edit</a>
         <form method="post" action="{{ url_for('admin.listings_delete', listing_id=l['id']) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <button type="submit" onclick="return confirm('Delete this listing?')">Delete</button>
         </form>
       </td>

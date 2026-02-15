@@ -48,7 +48,8 @@ def login():
         flash("Wrong password.")       
     return render_template("admin/login.html")
 
-@bp.route("/logout")
+@bp.route("/logout", methods=("POST",))
+@admin_required
 def logout():
     session.clear()
     return redirect(url_for("admin.login"))

@@ -16,6 +16,10 @@
   align-items: center;
 }
 
+.admin-actions form {
+  margin: 0;
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;

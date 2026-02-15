@@ -1,6 +1,7 @@
 import os
+import secrets
 
-from flask import Flask, render_template
+from flask import Flask, abort, render_template, request, session
 
 from .extensions import limiter
 
@@ -11,9 +12,9 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        SECRET_KEY='dev',
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
-        ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD", "change-me"),
+        SECRET_KEY=os.environ.get("SECRET_KEY"),
+        ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD"),
     )
 
     limiter.init_app(app)
@@ -28,6 +29,28 @@ def create_app(test_config=None):
     else:
         # load the test config if passed in
         app.config.from_mapping(test_config)
+
+    if not app.config.get("SECRET_KEY"):
+        raise RuntimeError("SECRET_KEY is required. Set it via env or instance/config.py.")
+    if not app.config.get("ADMIN_PASSWORD"):
+        raise RuntimeError("ADMIN_PASSWORD is required. Set it via env or instance/config.py.")
+
+    @app.context_processor
+    def inject_csrf_token():
+        token = session.get("_csrf_token")
+        if token is None:
+            token = secrets.token_urlsafe(32)
+            session["_csrf_token"] = token
+        return {"csrf_token": token}
+
+    @app.before_request
+    def csrf_protect():
+        if app.testing:
+            return
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            token = request.form.get("csrf_token") or request.headers.get("X-CSRFToken")
+            if not token or token != session.get("_csrf_token"):
+                abort(400)
 
     # ensure the instance folder exists
     os.makedirs(app.instance_path, exist_ok=True)

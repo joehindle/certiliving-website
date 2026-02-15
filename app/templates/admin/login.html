@@ -3,6 +3,7 @@
 <div class="container admin-page">
   <h1>Staff Login</h1>
   <form method="post" class="admin-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="password" name="password" placeholder="Admin password" required>
     <button type="submit">Login</button>
   </form>

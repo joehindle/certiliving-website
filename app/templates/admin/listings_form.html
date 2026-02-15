@@ -5,6 +5,7 @@
   <h1>{{ 'Edit' if listing else 'New' }} Listing</h1>
 
   <form method="post" class="admin-form admin-form-wide">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
     <input name="title" placeholder="Title"
            value="{{ listing['title'] if listing else '' }}" required>

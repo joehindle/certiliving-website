@@ -42,6 +42,7 @@
       <p class="enquiry-hint">We'll forward your message to the accommodation contact.</p>
 
       <form method="post" class="enquiry-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label class="field">
           <span>Your name</span>
           <input name="name" placeholder="Joe Hindle" required>
