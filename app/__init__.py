@@ -1,6 +1,7 @@
 import os
 
-from flask import Flask
+from flask import Flask, flash, redirect, url_for, render_template
+
 from .extensions import limiter
 
 
@@ -19,8 +20,7 @@ def create_app(test_config=None):
 
     @app.errorhandler(429)
     def ratelimit_handler(e):
-        flash("Too many attempts. Please wait a minute and try again.", "error")
-        return redirect(url_for("admin.login"))
+        return render_template("429.html"), 429
 
     if test_config is None:
         # load the instance config, if it exists, when not testing
