@@ -1,6 +1,8 @@
 import os
 
 from flask import Flask
+from .extensions import limiter
+
 
 
 def create_app(test_config=None):
@@ -12,6 +14,13 @@ def create_app(test_config=None):
         DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
         ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD", "change-me"),
     )
+
+    limiter.init_app(app)
+
+    @app.errorhandler(429)
+    def ratelimit_handler(e):
+        flash("Too many attempts. Please wait a minute and try again.", "error")
+        return redirect(url_for("admin.login"))
 
     if test_config is None:
         # load the instance config, if it exists, when not testing

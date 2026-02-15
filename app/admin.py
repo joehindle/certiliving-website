@@ -1,6 +1,9 @@
 from functools import wraps
 from flask import Blueprint, current_app, request, session, redirect, url_for, render_template, flash
-from .db import get_db  # adjust import to match your project
+from .db import get_db  
+from .extensions import limiter
+import time
+
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
@@ -13,13 +16,16 @@ def admin_required(view):
     return wrapped
 
 @bp.route("/login", methods=("GET", "POST"))
+@limiter.limit("5 per minute")
+@limiter.limit("30 per hour")
 def login():
     if request.method == "POST":
         password = request.form.get("password", "")
         if password == current_app.config["ADMIN_PASSWORD"]:
             session["is_admin"] = True
             return redirect(url_for("admin.listings_index"))
-        flash("Wrong password.")
+        time.sleep(0.8)
+        flash("Wrong password.")       
     return render_template("admin/login.html")
 
 @bp.route("/logout")
