@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container page-content">
+  <a class="back-link" href="{{ url_for('listings.index') }}">&larr; Back to home</a>
+
+  <section class="section all-listings-section">
+    <h2>All Listings</h2>
+
+    <form class="listings-filters" method="get">
+      <label>
+        <span>Sort</span>
+        <select name="sort">
+          <option value="newest" {% if filters['sort'] == 'newest' %}selected{% endif %}>Newest</option>
+          <option value="price_asc" {% if filters['sort'] == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+          <option value="price_desc" {% if filters['sort'] == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+        </select>
+      </label>
+
+      <label>
+        <span>City</span>
+        <select name="city">
+          <option value="">All cities</option>
+          {% for row in city_options %}
+          <option value="{{ row['city'] }}" {% if filters['city'] == row['city'] %}selected{% endif %}>
+            {{ row['city'] }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Room Type</span>
+        <select name="room_type">
+          <option value="">All room types</option>
+          {% for row in room_type_options %}
+          <option value="{{ row['room_type'] }}" {% if filters['room_type'] == row['room_type'] %}selected{% endif %}>
+            {{ row['room_type'] }}
+          </option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Min Rent (PCM)</span>
+        <input type="number" name="min_rent" min="0" value="{{ filters['min_rent'] }}">
+      </label>
+
+      <label>
+        <span>Max Rent (PCM)</span>
+        <input type="number" name="max_rent" min="0" value="{{ filters['max_rent'] }}">
+      </label>
+
+      <label class="filter-checkbox">
+        <input type="checkbox" name="bills_only" value="1" {% if filters['bills_only'] %}checked{% endif %}>
+        Bills included only
+      </label>
+
+      <div class="filter-actions">
+        <button type="submit" class="primary-btn">Apply Filters</button>
+        <a href="{{ url_for('listings.all_listings') }}">Clear</a>
+      </div>
+    </form>
+
+    {% if active_chips %}
+    <div class="active-filters">
+      {% for chip in active_chips %}
+      <a class="filter-chip" href="{{ chip['remove_url'] }}">{{ chip['label'] }} &times;</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <p class="results-summary">{{ pagination['total_results'] }} result{% if pagination['total_results'] != 1 %}s{% endif %}</p>
+
+    {% if listings %}
+    <div class="listing-grid">
+      {% for listing in listings %}
+      <div class="listing-card">
+        <div class="image-wrapper">
+          <img class="listing-image"
+               src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}"
+               alt="{{ listing['title'] }}">
+          <div class="image-gradient"></div>
+          <div class="price-badge">&pound;{{ listing['rent_pcm'] }} PCM</div>
+        </div>
+
+        <div class="listing-body">
+          <a href="{{ url_for('listings.detail', listing_id=listing['id']) }}">
+            <h3>{{ listing['title'] }}</h3>
+          </a>
+          <p class="city">{{ listing['city'] }}</p>
+          <div class="badge-row">
+            {% if listing['room_type'] %}
+              <span class="badge">{{ listing['room_type'] }}</span>
+            {% endif %}
+            {% if listing['bills_included'] %}
+              <span class="badge badge-green">Bills Included</span>
+            {% endif %}
+            {% if listing['available_from'] %}
+              <span class="badge badge-gray">Available {{ listing['available_from'] }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% if pagination['total_pages'] > 1 %}
+    <nav class="pagination" aria-label="Listings pagination">
+      {% if pagination['has_prev'] %}
+      <a href="{{ pagination['prev_url'] }}">&larr; Previous</a>
+      {% else %}
+      <span class="disabled">&larr; Previous</span>
+      {% endif %}
+
+      {% for page_link in pagination['page_links'] %}
+        {% if page_link['is_current'] %}
+        <span class="current">{{ page_link['page'] }}</span>
+        {% else %}
+        <a href="{{ page_link['url'] }}">{{ page_link['page'] }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if pagination['has_next'] %}
+      <a href="{{ pagination['next_url'] }}">Next &rarr;</a>
+      {% else %}
+      <span class="disabled">Next &rarr;</span>
+      {% endif %}
+    </nav>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <h3>No listings yet</h3>
+      <p>New student properties coming soon.</p>
+    </div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

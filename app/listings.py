@@ -3,6 +3,7 @@ from flask import (
 )
 
 import re
+from urllib.parse import urlencode
 
 from werkzeug.exceptions import abort
 
@@ -30,11 +31,197 @@ def _validate_enquiry_form(name, email, message):
 @bp.route('/')
 def index():
     db = get_db()
-    listings = db.execute(
-        "SELECT * FROM listings ORDER BY created DESC"
+    recent_listings = db.execute(
+        "SELECT * FROM listings ORDER BY created DESC LIMIT 7"
+    ).fetchall()
+    highlighted_listings = recent_listings[:6]
+    has_more = len(recent_listings) > 6
+
+    return render_template(
+        'listings/index.html',
+        highlighted_listings=highlighted_listings,
+        has_more=has_more,
+    )
+
+
+@bp.route('/listings')
+def all_listings():
+    db = get_db()
+    city = request.args.get('city', '').strip()
+    room_type = request.args.get('room_type', '').strip()
+    bills_only = request.args.get('bills_only', '').strip() == '1'
+    min_rent_raw = request.args.get('min_rent', '').strip()
+    max_rent_raw = request.args.get('max_rent', '').strip()
+    sort = request.args.get('sort', 'newest').strip()
+    page_raw = request.args.get('page', '1').strip()
+
+    min_rent = None
+    max_rent = None
+    try:
+        if min_rent_raw:
+            min_rent = int(min_rent_raw)
+    except ValueError:
+        min_rent = None
+    try:
+        if max_rent_raw:
+            max_rent = int(max_rent_raw)
+    except ValueError:
+        max_rent = None
+
+    try:
+        page = int(page_raw)
+        if page < 1:
+            page = 1
+    except ValueError:
+        page = 1
+
+    where_clauses = []
+    params = []
+    if city:
+        where_clauses.append("city = ?")
+        params.append(city)
+    if room_type:
+        where_clauses.append("room_type = ?")
+        params.append(room_type)
+    if bills_only:
+        where_clauses.append("bills_included = 1")
+    if min_rent is not None:
+        where_clauses.append("rent_pcm >= ?")
+        params.append(min_rent)
+    if max_rent is not None:
+        where_clauses.append("rent_pcm <= ?")
+        params.append(max_rent)
+
+    sort_map = {
+        'newest': 'created DESC',
+        'price_asc': 'rent_pcm ASC, created DESC',
+        'price_desc': 'rent_pcm DESC, created DESC',
+    }
+    order_by = sort_map.get(sort, sort_map['newest'])
+    if sort not in sort_map:
+        sort = 'newest'
+
+    where_sql = ""
+    if where_clauses:
+        where_sql = " WHERE " + " AND ".join(where_clauses)
+
+    total = db.execute(
+        "SELECT COUNT(*) AS total FROM listings" + where_sql,
+        params,
+    ).fetchone()["total"]
+
+    page_size = 12
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    if page > total_pages:
+        page = total_pages
+    offset = (page - 1) * page_size
+
+    query = f"SELECT * FROM listings{where_sql} ORDER BY {order_by} LIMIT ? OFFSET ?"
+    listings = db.execute(query, (*params, page_size, offset)).fetchall()
+
+    city_options = db.execute(
+        "SELECT DISTINCT city FROM listings WHERE city IS NOT NULL AND city != '' ORDER BY city ASC"
+    ).fetchall()
+    room_type_options = db.execute(
+        "SELECT DISTINCT room_type FROM listings WHERE room_type IS NOT NULL AND room_type != '' ORDER BY room_type ASC"
     ).fetchall()
 
-    return render_template('listings/index.html', listings=listings)
+    filters = {
+        'city': city,
+        'room_type': room_type,
+        'bills_only': bills_only,
+        'min_rent': min_rent_raw,
+        'max_rent': max_rent_raw,
+        'sort': sort,
+    }
+
+    base_params = {
+        'city': city,
+        'room_type': room_type,
+        'bills_only': '1' if bills_only else '',
+        'min_rent': min_rent_raw,
+        'max_rent': max_rent_raw,
+        'sort': sort,
+    }
+
+    def build_url(extra=None, drop=None):
+        params_copy = dict(base_params)
+        if drop:
+            for key in drop:
+                params_copy.pop(key, None)
+        if extra:
+            params_copy.update(extra)
+        params_copy = {
+            key: value for key, value in params_copy.items()
+            if value not in ("", None)
+        }
+        querystring = urlencode(params_copy)
+        if querystring:
+            return f"{url_for('listings.all_listings')}?{querystring}"
+        return url_for('listings.all_listings')
+
+    active_chips = []
+    if city:
+        active_chips.append({
+            'label': f"City: {city}",
+            'remove_url': build_url(drop=['city', 'page']),
+        })
+    if room_type:
+        active_chips.append({
+            'label': f"Room: {room_type}",
+            'remove_url': build_url(drop=['room_type', 'page']),
+        })
+    if bills_only:
+        active_chips.append({
+            'label': "Bills included",
+            'remove_url': build_url(drop=['bills_only', 'page']),
+        })
+    if min_rent_raw:
+        active_chips.append({
+            'label': f"Min rent: {min_rent_raw}",
+            'remove_url': build_url(drop=['min_rent', 'page']),
+        })
+    if max_rent_raw:
+        active_chips.append({
+            'label': f"Max rent: {max_rent_raw}",
+            'remove_url': build_url(drop=['max_rent', 'page']),
+        })
+    if sort != 'newest':
+        sort_label = "Price low to high" if sort == 'price_asc' else "Price high to low"
+        active_chips.append({
+            'label': f"Sort: {sort_label}",
+            'remove_url': build_url(extra={'sort': 'newest'}, drop=['page']),
+        })
+
+    page_links = [
+        {
+            'page': page_number,
+            'url': build_url(extra={'page': page_number}),
+            'is_current': page_number == page,
+        }
+        for page_number in range(1, total_pages + 1)
+    ]
+
+    pagination = {
+        'page': page,
+        'total_pages': total_pages,
+        'total_results': total,
+        'has_prev': page > 1,
+        'has_next': page < total_pages,
+        'prev_url': build_url(extra={'page': page - 1}) if page > 1 else None,
+        'next_url': build_url(extra={'page': page + 1}) if page < total_pages else None,
+        'page_links': page_links,
+    }
+
+    return render_template(
+        'listings/all.html',
+        listings=listings,
+        filters=filters,
+        city_options=city_options,
+        room_type_options=room_type_options,
+        active_chips=active_chips,
+        pagination=pagination,
+    )
 
 @bp.route('/listings/<int:listing_id>', methods=('GET', 'POST'))
 def detail(listing_id):
@@ -47,6 +234,34 @@ def detail(listing_id):
 
     if listing is None:
         abort(404)
+
+    similar_listings = db.execute(
+        """
+        SELECT *
+        FROM listings
+        WHERE id != ? AND city = ?
+        ORDER BY ABS(rent_pcm - ?) ASC, created DESC
+        LIMIT 6
+        """,
+        (listing_id, listing["city"], listing["rent_pcm"]),
+    ).fetchall()
+
+    if len(similar_listings) < 6:
+        needed = 6 - len(similar_listings)
+        exclude_ids = [row["id"] for row in similar_listings]
+        exclude_ids.append(listing_id)
+        placeholders = ",".join("?" for _ in exclude_ids)
+        fallback_listings = db.execute(
+            f"""
+            SELECT *
+            FROM listings
+            WHERE id NOT IN ({placeholders})
+            ORDER BY created DESC
+            LIMIT ?
+            """,
+            (*exclude_ids, needed),
+        ).fetchall()
+        similar_listings = list(similar_listings) + list(fallback_listings)
 
     # Handle enquiry form submission
     if request.method == 'POST':
@@ -73,4 +288,8 @@ def detail(listing_id):
             flash("Enquiry sent!", "success")
             return redirect(url_for('listings.detail', listing_id=listing_id))
 
-    return render_template('listings/detail.html', listing=listing)
+    return render_template(
+        'listings/detail.html',
+        listing=listing,
+        similar_listings=similar_listings,
+    )

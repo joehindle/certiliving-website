@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container detail-page">
 
-<a class="back-link" href="{{ url_for('listings.index') }}">&larr; Back to listings</a>
+<a class="back-link" href="{{ url_for('listings.index') }}#listings">&larr; Back to listings</a>
 
 <div class="detail-grid">
 
@@ -64,6 +64,47 @@
   </aside>
 
 </div>
+
+{% if similar_listings %}
+<section class="similar-listings">
+  <h2>Similar Listings</h2>
+  <p class="similar-listings-intro">
+    More options in {{ listing['city'] }} around &pound;{{ listing['rent_pcm'] }} PCM.
+  </p>
+  <div class="listing-grid">
+    {% for item in similar_listings %}
+    <div class="listing-card">
+      <div class="image-wrapper">
+        <img class="listing-image"
+             src="{{ item['photo_url'] if item['photo_url'] else 'https://via.placeholder.com/400x250' }}"
+             alt="{{ item['title'] }}">
+        <div class="image-gradient"></div>
+        <div class="price-badge">&pound;{{ item['rent_pcm'] }} PCM</div>
+      </div>
+
+      <div class="listing-body">
+        <a href="{{ url_for('listings.detail', listing_id=item['id']) }}">
+          <h3>{{ item['title'] }}</h3>
+        </a>
+        <p class="city">{{ item['city'] }}</p>
+
+        <div class="badge-row">
+          {% if item['room_type'] %}
+            <span class="badge">{{ item['room_type'] }}</span>
+          {% endif %}
+          {% if item['bills_included'] %}
+            <span class="badge badge-green">Bills Included</span>
+          {% endif %}
+          {% if item['available_from'] %}
+            <span class="badge badge-gray">Available {{ item['available_from'] }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
 </div>
 
 {% endblock %}
