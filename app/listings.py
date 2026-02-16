@@ -51,6 +51,7 @@ def all_listings():
     max_rent_raw = request.args.get('max_rent', '').strip()
     sort = request.args.get('sort', 'newest').strip()
     page_raw = request.args.get('page', '1').strip()
+    per_page_raw = request.args.get('per_page', '').strip()
 
     min_rent = None
     max_rent = None
@@ -71,6 +72,13 @@ def all_listings():
             page = 1
     except ValueError:
         page = 1
+
+    try:
+        per_page = int(per_page_raw) if per_page_raw else 9
+    except ValueError:
+        per_page = 9
+    if per_page not in {4, 6, 9}:
+        per_page = 9
 
     where_clauses = []
     params = []
@@ -107,7 +115,7 @@ def all_listings():
         params,
     ).fetchone()["total"]
 
-    page_size = 12
+    page_size = per_page
     total_pages = max(1, (total + page_size - 1) // page_size)
     if page > total_pages:
         page = total_pages
@@ -130,6 +138,7 @@ def all_listings():
         'min_rent': min_rent_raw,
         'max_rent': max_rent_raw,
         'sort': sort,
+        'per_page': str(per_page),
     }
 
     base_params = {
@@ -139,6 +148,7 @@ def all_listings():
         'min_rent': min_rent_raw,
         'max_rent': max_rent_raw,
         'sort': sort,
+        'per_page': str(per_page),
     }
 
     def build_url(extra=None, drop=None):

@@ -7,6 +7,7 @@
     <h2>All Listings</h2>
 
     <form class="listings-filters" method="get">
+      <input type="hidden" name="per_page" value="{{ filters['per_page'] }}">
       <label>
         <span>Sort</span>
         <select name="sort">
@@ -135,4 +136,16 @@
     {% endif %}
   </section>
 </div>
+<script>
+(() => {
+  const desired = window.innerWidth <= 650 ? 4 : (window.innerWidth <= 900 ? 6 : 9);
+  const url = new URL(window.location.href);
+  const current = Number(url.searchParams.get("per_page") || 9);
+  if (current !== desired) {
+    url.searchParams.set("per_page", String(desired));
+    url.searchParams.set("page", "1");
+    window.location.replace(url.toString());
+  }
+})();
+</script>
 {% endblock %}
