@@ -646,6 +646,9 @@ main { flex: 1; }
   .listing-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .similar-grid .listing-card:nth-child(n + 5) {
+    display: none;
+  }
   .featured-grid .listing-card:nth-child(n + 5) {
     display: none;
   }
@@ -716,6 +719,9 @@ main { flex: 1; }
   }
   .listing-grid {
     grid-template-columns: 1fr;
+  }
+  .similar-grid .listing-card:nth-child(n + 4) {
+    display: none;
   }
   .featured-grid .listing-card:nth-child(n + 4) {
     display: none;
