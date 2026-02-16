@@ -1,6 +1,12 @@
 from functools import wraps
+from pathlib import Path
+import mimetypes
+import uuid
 
+import boto3
+from botocore.client import Config
 from flask import Blueprint, current_app, request, session, redirect, url_for, render_template, flash
+from werkzeug.utils import secure_filename
 from .db import get_db
 from .extensions import limiter
 import time
@@ -19,12 +25,76 @@ def _parse_listing_form(form):
         "title": form["title"].strip(),
         "city": form["city"].strip(),
         "rent_pcm": form["rent_pcm"],
-        "photo_url": _clean_optional(form.get("photo_url")),
         "room_type": _clean_optional(form.get("room_type")),
         "bills_included": 1 if form.get("bills_included") == "on" else 0,
         "available_from": _clean_optional(form.get("available_from")),
         "description": (form.get("description") or "").strip(),
     }
+
+
+def _listing_preview_from_form(form, existing_photo_url=None):
+    return {
+        "title": (form.get("title") or "").strip(),
+        "city": (form.get("city") or "").strip(),
+        "rent_pcm": (form.get("rent_pcm") or "").strip(),
+        "photo_url": existing_photo_url,
+        "room_type": _clean_optional(form.get("room_type")),
+        "bills_included": form.get("bills_included") == "on",
+        "available_from": _clean_optional(form.get("available_from")),
+        "description": (form.get("description") or "").strip(),
+    }
+
+
+def _build_r2_client():
+    account_id = current_app.config.get("R2_ACCOUNT_ID")
+    access_key = current_app.config.get("R2_ACCESS_KEY_ID")
+    secret_key = current_app.config.get("R2_SECRET_ACCESS_KEY")
+    if not account_id or not access_key or not secret_key:
+        raise RuntimeError("R2 credentials are missing.")
+
+    return boto3.client(
+        "s3",
+        endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key,
+        config=Config(signature_version="s3v4"),
+        region_name="auto",
+    )
+
+
+def _upload_listing_image(photo_file):
+    filename = secure_filename(photo_file.filename or "")
+    if not filename:
+        return None
+
+    ext = Path(filename).suffix.lower()
+    allowed_exts = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
+    if ext not in allowed_exts:
+        raise ValueError("Please upload a JPG, PNG, WEBP, or GIF image.")
+
+    content_type = photo_file.mimetype or mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    if not content_type.startswith("image/"):
+        raise ValueError("Invalid file type. Please upload an image.")
+
+    key = f"listings/{uuid.uuid4().hex}{ext}"
+    bucket = current_app.config.get("R2_BUCKET")
+    base_url = (current_app.config.get("R2_PUBLIC_BASE_URL") or "").strip().rstrip("/")
+    missing = []
+    if not bucket:
+        missing.append("R2_BUCKET")
+    if not base_url:
+        missing.append("R2_PUBLIC_BASE_URL")
+    if missing:
+        raise RuntimeError("Missing R2 config: " + ", ".join(missing))
+
+    client = _build_r2_client()
+    client.put_object(
+        Bucket=bucket,
+        Key=key,
+        Body=photo_file.stream,
+        ContentType=content_type,
+    )
+    return f"{base_url}/{key}"
 
 
 def admin_required(view):
@@ -71,6 +141,15 @@ def listings_index():
 def listings_new():
     if request.method == "POST":
         listing_data = _parse_listing_form(request.form)
+        photo_url = None
+        photo_file = request.files.get("photo_file")
+        if photo_file and photo_file.filename:
+            try:
+                photo_url = _upload_listing_image(photo_file)
+            except Exception as exc:
+                flash(f"Image upload failed: {exc}", "error")
+                listing_preview = _listing_preview_from_form(request.form)
+                return render_template("admin/listings_form.html", listing=listing_preview)
 
         db = get_db()
         db.execute(
@@ -81,7 +160,7 @@ def listings_new():
                 listing_data["title"],
                 listing_data["city"],
                 listing_data["rent_pcm"],
-                listing_data["photo_url"],
+                photo_url,
                 listing_data["room_type"],
                 listing_data["bills_included"],
                 listing_data["available_from"],
@@ -103,6 +182,18 @@ def listings_edit(listing_id):
 
     if request.method == "POST":
         listing_data = _parse_listing_form(request.form)
+        photo_url = listing["photo_url"]
+        photo_file = request.files.get("photo_file")
+        if photo_file and photo_file.filename:
+            try:
+                photo_url = _upload_listing_image(photo_file)
+            except Exception as exc:
+                flash(f"Image upload failed: {exc}", "error")
+                listing_preview = _listing_preview_from_form(
+                    request.form,
+                    existing_photo_url=listing["photo_url"],
+                )
+                return render_template("admin/listings_form.html", listing=listing_preview)
 
         db.execute(
             """UPDATE listings
@@ -112,7 +203,7 @@ def listings_edit(listing_id):
                 listing_data["title"],
                 listing_data["city"],
                 listing_data["rent_pcm"],
-                listing_data["photo_url"],
+                photo_url,
                 listing_data["room_type"],
                 listing_data["bills_included"],
                 listing_data["available_from"],

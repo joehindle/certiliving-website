@@ -57,6 +57,27 @@
   border-radius: 8px;
 }
 
+.admin-field span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-hint {
+  margin: 2px 0 6px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.admin-image-preview {
+  width: 100%;
+  max-width: 260px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  display: block;
+}
+
 .admin-checkbox {
   display: flex;
   align-items: center;
