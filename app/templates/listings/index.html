@@ -31,13 +31,11 @@
 
   <p class="why-lead">
     At CertiLiving, we make finding student accommodation simple, safe, and
-    stress-free. Every home is verified, so you can browse with complete
+    stress-free. Every home is <strong>verified</strong>, so you can browse with complete
     confidence. Tell us your preferences from move-in date to budget and we'll
     match you with the best options, connecting you directly with trusted
     providers.
   </p>
-
-  <p class="why-subline">Verified homes. Transparent options. Direct provider contact.</p>
 
 </section>
 
@@ -73,7 +71,7 @@
     <h2>Featured Student Accommodation</h2>
 
     {% if highlighted_listings %}
-    <div class="listing-grid">
+    <div class="listing-grid featured-grid">
         {% for listing in highlighted_listings %}
         <div class="listing-card">
             <div class="image-wrapper">
@@ -114,9 +112,7 @@
         </div>
         {% endfor %}
     </div>
-    {% if has_more %}
     <a href="{{ url_for('listings.all_listings') }}" class="btn-primary">View All Listings</a>
-    {% endif %}
     {% else %}
     <div class="empty-state">
         <h3>No listings yet</h3>

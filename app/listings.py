@@ -31,16 +31,13 @@ def _validate_enquiry_form(name, email, message):
 @bp.route('/')
 def index():
     db = get_db()
-    recent_listings = db.execute(
-        "SELECT * FROM listings ORDER BY created DESC LIMIT 7"
+    highlighted_listings = db.execute(
+        "SELECT * FROM listings ORDER BY created DESC LIMIT 6"
     ).fetchall()
-    highlighted_listings = recent_listings[:6]
-    has_more = len(recent_listings) > 6
 
     return render_template(
         'listings/index.html',
         highlighted_listings=highlighted_listings,
-        has_more=has_more,
     )
 
 
