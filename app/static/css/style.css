@@ -657,6 +657,26 @@ main { flex: 1; }
 }
 
 @media (max-width: 650px) {
+  .nav-inner {
+    height: auto;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .nav-links {
+    width: 100%;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .nav-links a {
+    font-size: 12px;
+  }
+  .brand {
+    font-size: 20px;
+  }
   .container {
     padding-top: 22px;
     padding-bottom: 18px;
@@ -664,11 +684,30 @@ main { flex: 1; }
   .section {
     margin: 40px 0;
   }
+  .section h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  .section p {
+    margin-bottom: 14px;
+  }
   .alt-bg {
     padding: 20px;
   }
   .dash-divider {
     margin: 32px 0;
+  }
+  .btn-primary,
+  .primary-btn {
+    width: 100%;
+  }
+  .filter-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .filter-actions a {
+    text-align: center;
   }
   .listing-grid {
     grid-template-columns: 1fr;
@@ -679,6 +718,15 @@ main { flex: 1; }
   .filter-checkbox,
   .filter-actions {
     padding-top: 0;
+  }
+  .detail-meta {
+    gap: 8px;
+  }
+  .meta-pill {
+    font-size: 12px;
+  }
+  .similar-listings h2 {
+    font-size: 22px;
   }
 }
 
