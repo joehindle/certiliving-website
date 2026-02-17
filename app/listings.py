@@ -1,10 +1,12 @@
 from flask import (
-    Blueprint, flash, redirect, render_template, request, url_for
+    Blueprint, current_app, flash, redirect, render_template, request, url_for
 )
 
+import html
 import re
 from urllib.parse import urlencode
 
+import resend
 from werkzeug.exceptions import abort
 
 from .db import get_db
@@ -26,6 +28,41 @@ def _validate_enquiry_form(name, email, message):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return "Invalid email address."
     return None
+
+
+def _send_enquiry_email(listing, name, email, message):
+    resend_api_key = current_app.config.get("RESEND_API_KEY")
+    to_email = current_app.config.get("ENQUIRY_TO_EMAIL")
+    from_email = current_app.config.get("RESEND_FROM_EMAIL")
+
+    if not resend_api_key:
+        raise RuntimeError("Missing RESEND_API_KEY")
+    if not to_email:
+        raise RuntimeError("Missing ENQUIRY_TO_EMAIL")
+    if not from_email:
+        raise RuntimeError("Missing RESEND_FROM_EMAIL")
+
+    resend.api_key = resend_api_key
+
+    safe_name = html.escape(name)
+    safe_email = html.escape(email)
+    safe_message = html.escape(message).replace("\n", "<br>")
+    safe_title = html.escape(listing["title"])
+    safe_city = html.escape(listing["city"])
+    listing_url = url_for("listings.detail", listing_id=listing["id"], _external=True)
+
+    resend.Emails.send({
+        "from": from_email,
+        "to": to_email,
+        "subject": f"New enquiry for {listing['title']} ({listing['city']})",
+        "html": (
+            "<h2>New CertiLiving enquiry</h2>"
+            f"<p><strong>Listing:</strong> {safe_title} ({safe_city})</p>"
+            f"<p><strong>From:</strong> {safe_name} ({safe_email})</p>"
+            f"<p><strong>Message:</strong><br>{safe_message}</p>"
+            f"<p><a href=\"{listing_url}\">View listing</a></p>"
+        ),
+    })
 
 
 @bp.route('/')
@@ -291,8 +328,11 @@ def detail(listing_id):
                 (listing_id, name, email, message)
             )
             db.commit()
-
-            flash("Enquiry sent!", "success")
+            try:
+                _send_enquiry_email(listing, name, email, message)
+                flash("Enquiry sent!", "success")
+            except Exception:
+                flash("Enquiry saved, but email notification failed.", "error")
             return redirect(url_for('listings.detail', listing_id=listing_id))
 
     return render_template(
