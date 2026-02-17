@@ -23,7 +23,7 @@ def _validate_enquiry_form(name, email, message):
         return "Message is required."
     if len(name) > 100:
         return "Name is too long."
-    if len(message) > 2000:
+    if len(message) > 1500:
         return "Message is too long."
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return "Invalid email address."
@@ -332,6 +332,10 @@ def detail(listing_id):
                 _send_enquiry_email(listing, name, email, message)
                 flash("Enquiry sent!", "success")
             except Exception:
+                current_app.logger.exception(
+                    "Failed to send enquiry email for listing_id=%s",
+                    listing_id,
+                )
                 flash("Enquiry saved, but email notification failed.", "error")
             return redirect(url_for('listings.detail', listing_id=listing_id))
 

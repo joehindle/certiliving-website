@@ -629,6 +629,22 @@ main { flex: 1; }
 
 .field textarea { resize: none; }
 
+.char-counter {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.char-counter.is-warning {
+  color: #b45309;
+}
+
+.char-counter.is-danger {
+  color: #b91c1c;
+}
+
 @media (max-width: 900px) {
   .container {
     padding-top: 28px;

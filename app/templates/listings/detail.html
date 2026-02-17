@@ -55,7 +55,8 @@
 
         <label class="field">
           <span>Message</span>
-          <textarea name="message" rows="5" placeholder="Hi, is this still available? When can I view?" required></textarea>
+          <textarea name="message" rows="5" maxlength="1500" placeholder="Hi, is this still available? When can I view?" required data-enquiry-message></textarea>
+          <small class="char-counter" data-char-counter aria-live="polite">0 / 1500 (recommended 300-800)</small>
         </label>
 
         <button class="primary-btn" type="submit">Send Enquiry</button>
@@ -113,5 +114,34 @@
 </div>
 {% endif %}
 </div>
+
+<script>
+(() => {
+  const messageInput = document.querySelector("[data-enquiry-message]");
+  const counter = document.querySelector("[data-char-counter]");
+  if (!messageInput || !counter) return;
+
+  const maxLength = 1500;
+
+  const updateCounter = () => {
+    if (messageInput.value.length > maxLength) {
+      messageInput.value = messageInput.value.slice(0, maxLength);
+    }
+
+    const length = messageInput.value.length;
+    counter.textContent = `${length} / ${maxLength}`;
+    counter.classList.remove("is-warning", "is-danger");
+
+    if (length >= maxLength) {
+      counter.classList.add("is-danger");
+    } else if (length >= 1300) {
+      counter.classList.add("is-warning");
+    }
+  };
+
+  messageInput.addEventListener("input", updateCounter);
+  updateCounter();
+})();
+</script>
 
 {% endblock %}
