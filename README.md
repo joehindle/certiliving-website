@@ -1,6 +1,7 @@
 # CertiLiving Website
 
 CertiLiving is a Flask web app for browsing and managing verified student accommodation listings.
+Live site: `https://certiliving.co.uk`
 
 ## What It Includes
 - Public listings pages: featured, all listings, and listing detail
