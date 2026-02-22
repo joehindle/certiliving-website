@@ -13,6 +13,13 @@ from .db import get_db
 
 bp = Blueprint('listings', __name__)
 
+MAX_NAME_LENGTH = 100
+MAX_MESSAGE_LENGTH = 1500
+DEFAULT_SORT = 'newest'
+DEFAULT_PER_PAGE = 9
+ALLOWED_PER_PAGE = {4, 6, 9}
+SIMILAR_LISTINGS_LIMIT = 6
+
 
 def _validate_enquiry_form(name, email, message):
     if not name:
@@ -21,9 +28,9 @@ def _validate_enquiry_form(name, email, message):
         return "Email is required."
     if not message:
         return "Message is required."
-    if len(name) > 100:
+    if len(name) > MAX_NAME_LENGTH:
         return "Name is too long."
-    if len(message) > 1500:
+    if len(message) > MAX_MESSAGE_LENGTH:
         return "Message is too long."
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return "Invalid email address."
@@ -69,7 +76,8 @@ def _send_enquiry_email(listing, name, email, message):
 def index():
     db = get_db()
     highlighted_listings = db.execute(
-        "SELECT * FROM listings ORDER BY created DESC LIMIT 6"
+        "SELECT * FROM listings ORDER BY created DESC LIMIT ?",
+        (SIMILAR_LISTINGS_LIMIT,),
     ).fetchall()
 
     return render_template(
@@ -86,7 +94,7 @@ def all_listings():
     bills_only = request.args.get('bills_only', '').strip() == '1'
     min_rent_raw = request.args.get('min_rent', '').strip()
     max_rent_raw = request.args.get('max_rent', '').strip()
-    sort = request.args.get('sort', 'newest').strip()
+    sort = request.args.get('sort', DEFAULT_SORT).strip()
     page_raw = request.args.get('page', '1').strip()
     per_page_raw = request.args.get('per_page', '').strip()
 
@@ -111,11 +119,11 @@ def all_listings():
         page = 1
 
     try:
-        per_page = int(per_page_raw) if per_page_raw else 9
+        per_page = int(per_page_raw) if per_page_raw else DEFAULT_PER_PAGE
     except ValueError:
-        per_page = 9
-    if per_page not in {4, 6, 9}:
-        per_page = 9
+        per_page = DEFAULT_PER_PAGE
+    if per_page not in ALLOWED_PER_PAGE:
+        per_page = DEFAULT_PER_PAGE
 
     where_clauses = []
     params = []
@@ -139,9 +147,9 @@ def all_listings():
         'price_asc': 'rent_pcm ASC, created DESC',
         'price_desc': 'rent_pcm DESC, created DESC',
     }
-    order_by = sort_map.get(sort, sort_map['newest'])
+    order_by = sort_map.get(sort, sort_map[DEFAULT_SORT])
     if sort not in sort_map:
-        sort = 'newest'
+        sort = DEFAULT_SORT
 
     where_sql = ""
     if where_clauses:
@@ -230,11 +238,11 @@ def all_listings():
             'label': f"Max rent: {max_rent_raw}",
             'remove_url': build_url(drop=['max_rent', 'page']),
         })
-    if sort != 'newest':
+    if sort != DEFAULT_SORT:
         sort_label = "Price low to high" if sort == 'price_asc' else "Price high to low"
         active_chips.append({
             'label': f"Sort: {sort_label}",
-            'remove_url': build_url(extra={'sort': 'newest'}, drop=['page']),
+            'remove_url': build_url(extra={'sort': DEFAULT_SORT}, drop=['page']),
         })
 
     page_links = [
@@ -267,6 +275,7 @@ def all_listings():
         pagination=pagination,
     )
 
+
 @bp.route('/listings/<int:listing_id>', methods=('GET', 'POST'))
 def detail(listing_id):
     db = get_db()
@@ -285,13 +294,13 @@ def detail(listing_id):
         FROM listings
         WHERE id != ? AND city = ?
         ORDER BY ABS(rent_pcm - ?) ASC, created DESC
-        LIMIT 6
+        LIMIT ?
         """,
-        (listing_id, listing["city"], listing["rent_pcm"]),
+        (listing_id, listing["city"], listing["rent_pcm"], SIMILAR_LISTINGS_LIMIT),
     ).fetchall()
 
-    if len(similar_listings) < 6:
-        needed = 6 - len(similar_listings)
+    if len(similar_listings) < SIMILAR_LISTINGS_LIMIT:
+        needed = SIMILAR_LISTINGS_LIMIT - len(similar_listings)
         exclude_ids = [row["id"] for row in similar_listings]
         exclude_ids.append(listing_id)
         placeholders = ",".join("?" for _ in exclude_ids)
