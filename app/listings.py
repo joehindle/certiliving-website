@@ -160,14 +160,13 @@ def all_listings():
         params,
     ).fetchone()["total"]
 
-    page_size = per_page
-    total_pages = max(1, (total + page_size - 1) // page_size)
+    total_pages = max(1, (total + per_page - 1) // per_page)
     if page > total_pages:
         page = total_pages
-    offset = (page - 1) * page_size
+    offset = (page - 1) * per_page
 
     query = f"SELECT * FROM listings{where_sql} ORDER BY {order_by} LIMIT ? OFFSET ?"
-    listings = db.execute(query, (*params, page_size, offset)).fetchall()
+    listings = db.execute(query, (*params, per_page, offset)).fetchall()
 
     city_options = db.execute(
         "SELECT DISTINCT city FROM listings WHERE city IS NOT NULL AND city != '' ORDER BY city ASC"
