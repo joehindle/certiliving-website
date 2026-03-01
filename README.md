@@ -12,7 +12,7 @@ Live site: `https://certiliving.co.uk`
 
 ## Tech Stack
 - Python + Flask
-- SQLite
+- PostgreSQL (Supabase)
 - Jinja templates + custom CSS
 - Cloudflare R2 (S3-compatible) for images
 - Resend for enquiry email delivery
@@ -26,13 +26,14 @@ Live site: `https://certiliving.co.uk`
 2. Set environment variables (minimum for local run):
    - `SECRET_KEY`
    - `ADMIN_PASSWORD`
+   - `DATABASE_URL`
 3. Initialize database (if needed) and run:
    ```bash
    python run.py
    ```
 
 ## Environment Variables
-- Core: `SECRET_KEY`, `ADMIN_PASSWORD`
+- Core: `SECRET_KEY`, `ADMIN_PASSWORD`, `DATABASE_URL`
 - Email: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ENQUIRY_TO_EMAIL`
 - Storage: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL`
 

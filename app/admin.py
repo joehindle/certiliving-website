@@ -26,7 +26,7 @@ def _parse_listing_form(form):
         "city": form["city"].strip(),
         "rent_pcm": form["rent_pcm"],
         "room_type": _clean_optional(form.get("room_type")),
-        "bills_included": 1 if form.get("bills_included") == "on" else 0,
+        "bills_included": form.get("bills_included") == "on",
         "available_from": _clean_optional(form.get("available_from")),
         "description": (form.get("description") or "").strip(),
     }
@@ -155,7 +155,7 @@ def listings_new():
         db.execute(
             """INSERT INTO listings
                (title, city, rent_pcm, photo_url, room_type, bills_included, available_from, description)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
             (
                 listing_data["title"],
                 listing_data["city"],
@@ -176,7 +176,7 @@ def listings_new():
 @admin_required
 def listings_edit(listing_id):
     db = get_db()
-    listing = db.execute("SELECT * FROM listings WHERE id = ?", (listing_id,)).fetchone()
+    listing = db.execute("SELECT * FROM listings WHERE id = %s", (listing_id,)).fetchone()
     if listing is None:
         return "Not found", 404
 
@@ -197,8 +197,8 @@ def listings_edit(listing_id):
 
         db.execute(
             """UPDATE listings
-               SET title=?, city=?, rent_pcm=?, photo_url=?, room_type=?, bills_included=?, available_from=?, description=?
-               WHERE id=?""",
+               SET title=%s, city=%s, rent_pcm=%s, photo_url=%s, room_type=%s, bills_included=%s, available_from=%s, description=%s
+               WHERE id=%s""",
             (
                 listing_data["title"],
                 listing_data["city"],
@@ -220,6 +220,6 @@ def listings_edit(listing_id):
 @admin_required
 def listings_delete(listing_id):
     db = get_db()
-    db.execute("DELETE FROM listings WHERE id = ?", (listing_id,))
+    db.execute("DELETE FROM listings WHERE id = %s", (listing_id,))
     db.commit()
     return redirect(url_for("admin.listings_index"))

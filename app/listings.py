@@ -76,7 +76,7 @@ def _send_enquiry_email(listing, name, email, message):
 def index():
     db = get_db()
     highlighted_listings = db.execute(
-        "SELECT * FROM listings ORDER BY created DESC LIMIT ?",
+        "SELECT * FROM listings ORDER BY created DESC LIMIT %s",
         (SIMILAR_LISTINGS_LIMIT,),
     ).fetchall()
 
@@ -128,18 +128,18 @@ def all_listings():
     where_clauses = []
     params = []
     if city:
-        where_clauses.append("city = ?")
+        where_clauses.append("city = %s")
         params.append(city)
     if room_type:
-        where_clauses.append("room_type = ?")
+        where_clauses.append("room_type = %s")
         params.append(room_type)
     if bills_only:
-        where_clauses.append("bills_included = 1")
+        where_clauses.append("bills_included = TRUE")
     if min_rent is not None:
-        where_clauses.append("rent_pcm >= ?")
+        where_clauses.append("rent_pcm >= %s")
         params.append(min_rent)
     if max_rent is not None:
-        where_clauses.append("rent_pcm <= ?")
+        where_clauses.append("rent_pcm <= %s")
         params.append(max_rent)
 
     sort_map = {
@@ -165,7 +165,7 @@ def all_listings():
         page = total_pages
     offset = (page - 1) * per_page
 
-    query = f"SELECT * FROM listings{where_sql} ORDER BY {order_by} LIMIT ? OFFSET ?"
+    query = f"SELECT * FROM listings{where_sql} ORDER BY {order_by} LIMIT %s OFFSET %s"
     listings = db.execute(query, (*params, per_page, offset)).fetchall()
 
     city_options = db.execute(
@@ -280,7 +280,7 @@ def detail(listing_id):
     db = get_db()
 
     listing = db.execute(
-        "SELECT * FROM listings WHERE id = ?",
+        "SELECT * FROM listings WHERE id = %s",
         (listing_id,)
     ).fetchone()
 
@@ -291,9 +291,9 @@ def detail(listing_id):
         """
         SELECT *
         FROM listings
-        WHERE id != ? AND city = ?
-        ORDER BY ABS(rent_pcm - ?) ASC, created DESC
-        LIMIT ?
+        WHERE id != %s AND city = %s
+        ORDER BY ABS(rent_pcm - %s) ASC, created DESC
+        LIMIT %s
         """,
         (listing_id, listing["city"], listing["rent_pcm"], SIMILAR_LISTINGS_LIMIT),
     ).fetchall()
@@ -302,14 +302,14 @@ def detail(listing_id):
         needed = SIMILAR_LISTINGS_LIMIT - len(similar_listings)
         exclude_ids = [row["id"] for row in similar_listings]
         exclude_ids.append(listing_id)
-        placeholders = ",".join("?" for _ in exclude_ids)
+        placeholders = ",".join("%s" for _ in exclude_ids)
         fallback_listings = db.execute(
             f"""
             SELECT *
             FROM listings
             WHERE id NOT IN ({placeholders})
             ORDER BY created DESC
-            LIMIT ?
+            LIMIT %s
             """,
             (*exclude_ids, needed),
         ).fetchall()
@@ -331,7 +331,7 @@ def detail(listing_id):
                 """
                 INSERT INTO enquiries
                 (listing_id, student_name, student_email, message)
-                VALUES (?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s)
                 """,
                 (listing_id, name, email, message)
             )

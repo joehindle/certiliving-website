@@ -14,7 +14,7 @@ def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
-        DATABASE=os.path.join(app.instance_path, 'flaskr.sqlite'),
+        DATABASE_URL=os.environ.get("DATABASE_URL"),
         SECRET_KEY=os.environ.get("SECRET_KEY"),
         ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD"),
         RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
@@ -44,6 +44,8 @@ def create_app(test_config=None):
         raise RuntimeError("SECRET_KEY is required. Set it via env or instance/config.py.")
     if not app.config.get("ADMIN_PASSWORD"):
         raise RuntimeError("ADMIN_PASSWORD is required. Set it via env or instance/config.py.")
+    if not app.config.get("DATABASE_URL"):
+        raise RuntimeError("DATABASE_URL is required. Set it via env or instance/config.py.")
 
     @app.context_processor
     def inject_csrf_token():

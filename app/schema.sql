@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS listings;
 
 -- LISTINGS (Properties / Rooms)
 CREATE TABLE listings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id BIGSERIAL PRIMARY KEY,
 
     title TEXT NOT NULL,
     description TEXT NOT NULL,
@@ -16,26 +16,26 @@ CREATE TABLE listings (
     deposit INTEGER,
 
     room_type TEXT,
-    bills_included BOOLEAN DEFAULT 0,
+    bills_included BOOLEAN DEFAULT FALSE,
 
     available_from DATE,
 
     photo_url TEXT,
 
-    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 
 -- ENQUIRIES (Student interest)
 CREATE TABLE enquiries (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id BIGSERIAL PRIMARY KEY,
 
     listing_id INTEGER NOT NULL,
     student_name TEXT NOT NULL,
     student_email TEXT NOT NULL,
     message TEXT NOT NULL,
 
-    created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (listing_id) REFERENCES listings(id) ON DELETE CASCADE
 );
