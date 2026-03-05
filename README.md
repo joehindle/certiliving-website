@@ -3,6 +3,20 @@
 CertiLiving is a Flask full-stack website for browsing and managing verified student accommodation listings.
 Live site: `https://certiliving.co.uk`
 
+## Screenshots
+
+<img src="docs/screenshots/1.png" width="800" alt="Homepage" />
+<img src="docs/screenshots/2.png" width="800" alt="Listings" />
+
+<details>
+  <summary>More screenshots</summary>
+
+  <img src="docs/screenshots/3.png" width="800" alt="Listing detail" />
+  <img src="docs/screenshots/4.png" width="800" alt="Admin dashboard" />
+  <img src="docs/screenshots/5.png" width="800" alt="Create listing (Admin)" />
+
+</details>
+
 ## What It Includes
 - Public listings pages: featured, all listings, and listing detail
 - Filtering, pagination, and similar listings
