@@ -97,6 +97,31 @@ def _upload_listing_image(photo_file):
     return f"{base_url}/{key}"
 
 
+def _delete_r2_image(photo_url):
+    if not photo_url:
+        return
+
+    try:
+        base_url = (current_app.config.get("R2_PUBLIC_BASE_URL") or "").strip().rstrip("/")
+        if not base_url:
+            return
+        if not photo_url.startswith(base_url + "/"):
+            return
+
+        key = photo_url[len(base_url) + 1:]
+        if not key:
+            return
+
+        bucket = current_app.config.get("R2_BUCKET")
+        if not bucket:
+            return
+
+        client = _build_r2_client()
+        client.delete_object(Bucket=bucket, Key=key)
+    except Exception:
+        current_app.logger.exception("Failed to delete R2 image: %s", photo_url)
+
+
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
@@ -186,7 +211,7 @@ def listings_edit(listing_id):
         photo_file = request.files.get("photo_file")
         if photo_file and photo_file.filename:
             try:
-                photo_url = _upload_listing_image(photo_file)
+                new_photo_url = _upload_listing_image(photo_file)
             except Exception as exc:
                 flash(f"Image upload failed: {exc}", "error")
                 listing_preview = _listing_preview_from_form(
@@ -194,6 +219,8 @@ def listings_edit(listing_id):
                     existing_photo_url=listing["photo_url"],
                 )
                 return render_template("admin/listings_form.html", listing=listing_preview)
+            _delete_r2_image(listing["photo_url"])
+            photo_url = new_photo_url
 
         db.execute(
             """UPDATE listings
@@ -220,6 +247,8 @@ def listings_edit(listing_id):
 @admin_required
 def listings_delete(listing_id):
     db = get_db()
+    listing = db.execute("SELECT photo_url FROM listings WHERE id = %s", (listing_id,)).fetchone()
+    _delete_r2_image(listing["photo_url"] if listing else None)
     db.execute("DELETE FROM listings WHERE id = %s", (listing_id,))
     db.commit()
     return redirect(url_for("admin.listings_index"))
