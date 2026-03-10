@@ -46,6 +46,10 @@ Live site: `https://certiliving.co.uk`
    python run.py
    ```
 
+## Database Commands
+- `flask init-db` initializes missing tables and is non-destructive.
+- `flask reset-db --yes` is destructive (drops all listings/enquiries) and asks for confirmation.
+
 ## Environment Variables
 - Core: `SECRET_KEY`, `ADMIN_PASSWORD`, `DATABASE_URL`
 - Email: `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ENQUIRY_TO_EMAIL`

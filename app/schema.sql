@@ -1,9 +1,5 @@
-DROP TABLE IF EXISTS enquiries;
-DROP TABLE IF EXISTS listings;
-
-
 -- LISTINGS (Properties / Rooms)
-CREATE TABLE listings (
+CREATE TABLE IF NOT EXISTS listings (
     id BIGSERIAL PRIMARY KEY,
 
     title TEXT NOT NULL,
@@ -27,10 +23,10 @@ CREATE TABLE listings (
 
 
 -- ENQUIRIES (Student interest)
-CREATE TABLE enquiries (
+CREATE TABLE IF NOT EXISTS enquiries (
     id BIGSERIAL PRIMARY KEY,
 
-    listing_id INTEGER NOT NULL,
+    listing_id BIGINT NOT NULL,
     student_name TEXT NOT NULL,
     student_email TEXT NOT NULL,
     message TEXT NOT NULL,

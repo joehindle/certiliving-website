@@ -36,9 +36,39 @@ def init_db():
 @with_appcontext
 def init_db_command():
     init_db()
-    click.echo('Database initialized.')
+    click.echo('Database initialized (non-destructive).')
+
+
+@click.command('reset-db')
+@click.option(
+    '--yes',
+    is_flag=True,
+    help='Confirm destructive reset (drops existing tables).',
+)
+@with_appcontext
+def reset_db_command(yes):
+    if not yes:
+        raise click.UsageError(
+            "Refusing to reset database without --yes. "
+            "This command is destructive and will drop all data."
+        )
+
+    if not click.confirm(
+        'This will permanently delete all listings and enquiries. Continue?'
+    ):
+        click.echo('Reset cancelled.')
+        return
+
+    db = get_db()
+    db.execute('DROP TABLE IF EXISTS enquiries')
+    db.execute('DROP TABLE IF EXISTS listings')
+    db.commit()
+
+    init_db()
+    click.echo('Database reset and re-initialized.')
 
 
 def init_app(app):
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)
+    app.cli.add_command(reset_db_command)
