@@ -5,15 +5,15 @@ Live site: `https://certiliving.co.uk`
 
 ## Screenshots
 
-<img src="docs/screenshots/1.png?v=2" width="800" alt="Homepage" />
-<img src="docs/screenshots/2.png?v=2" width="800" alt="Listings" />
+<img src="docs/screenshots/home.png" width="650" alt="Homepage" />
+<img src="docs/screenshots/listings.png" width="650" alt="Listings" />
 
 <details>
   <summary>More screenshots</summary>
 
-  <img src="docs/screenshots/3.png?v=2" width="800" alt="Listing detail" />
-  <img src="docs/screenshots/4.png?v=2" width="800" alt="Admin dashboard" />
-  <img src="docs/screenshots/5.png?v=2" width="800" alt="Create listing (Admin)" />
+  <img src="docs/screenshots/listing.png" width="650" alt="Listing detail" />
+  <img src="docs/screenshots/admin.png" width="650" alt="Admin dashboard" />
+  <img src="docs/screenshots/createlisting.png" width="650" alt="Create listing (Admin)" />
 
 </details>
 
