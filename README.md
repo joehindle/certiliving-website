@@ -5,14 +5,22 @@ Live site: `https://certiliving.co.uk`
 
 ## Screenshots
 
+### 1. Home Page
 <img src="docs/screenshots/home.png" width="650" alt="Homepage" />
+
+### 2. Listings Page
 <img src="docs/screenshots/listings.png" width="650" alt="Listings" />
 
 <details>
-  <summary>More screenshots</summary>
+  <summary>More screenshots (annotated)</summary>
 
+  <p><strong>3. Listing Detail Page</strong></p>
   <img src="docs/screenshots/listing.png" width="650" alt="Listing detail" />
+
+  <p><strong>4. Admin Dashboard</strong></p>
   <img src="docs/screenshots/admin.png" width="650" alt="Admin dashboard" />
+
+  <p><strong>5. Create Listing (Admin)</strong></p>
   <img src="docs/screenshots/createlisting.png" width="650" alt="Create listing (Admin)" />
 
 </details>
