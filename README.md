@@ -163,13 +163,9 @@ Build it locally:
 docker build -t certiliving .
 ```
 
-Run it locally with your environment variables:
-
-```bash
-docker run --rm -p 10000:10000 --env-file .env certiliving
-```
-
 The container starts `gunicorn` and binds to the `PORT` environment variable if it is set, or `10000` by default.
+
+For local container runs, use a local development database and dev-only environment values. Do not point the container at production credentials.
 
 ## GitHub Actions + Render
 
