@@ -152,3 +152,18 @@ The site will be available at `http://127.0.0.1:5000`.
 - Use a production WSGI server such as `gunicorn`.
 - Set all required environment variables in your hosting provider.
 - Ensure your Postgres, Resend, and R2 credentials are configured for the deployment environment.
+
+## GitHub Actions + Render
+
+This repository includes a GitHub Actions workflow at [`.github/workflows/ci-cd.yml`](/Users/hindl/certiliving-website/.github/workflows/ci-cd.yml).
+
+- On pull requests, it runs a lightweight CI smoke check.
+- On pushes to `main`, it runs the same check and then triggers a Render deploy hook.
+
+To finish the setup:
+
+1. Create your Render web service if it does not already exist.
+2. Set the service start command to `gunicorn run:app`.
+3. Add a GitHub secret named `RENDER_DEPLOY_HOOK_URL` with the deploy hook URL from Render.
+
+Render should also have the app environment variables set, especially `SECRET_KEY`, `ADMIN_PASSWORD`, and `DATABASE_URL`.
