@@ -16,6 +16,7 @@ jobs:
       SECRET_KEY: test-secret-key
       ADMIN_PASSWORD: test-admin-password
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+      PYTHONPATH: ${{ github.workspace }}
       RESEND_API_KEY: ""
       RESEND_FROM_EMAIL: onboarding@resend.dev
       ENQUIRY_TO_EMAIL: team@certiliving.co.uk
