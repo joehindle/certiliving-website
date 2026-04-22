@@ -153,6 +153,24 @@ The site will be available at `http://127.0.0.1:5000`.
 - Set all required environment variables in your hosting provider.
 - Ensure your Postgres, Resend, and R2 credentials are configured for the deployment environment.
 
+## Docker
+
+This project includes a Docker image definition in [`Dockerfile`](/Users/hindl/certiliving-website/Dockerfile).
+
+Build it locally:
+
+```bash
+docker build -t certiliving .
+```
+
+Run it locally with your environment variables:
+
+```bash
+docker run --rm -p 10000:10000 --env-file .env certiliving
+```
+
+The container starts `gunicorn` and binds to the `PORT` environment variable if it is set, or `10000` by default.
+
 ## GitHub Actions + Render
 
 This repository includes a GitHub Actions workflow at [`.github/workflows/ci-cd.yml`](/Users/hindl/certiliving-website/.github/workflows/ci-cd.yml).
@@ -163,7 +181,7 @@ This repository includes a GitHub Actions workflow at [`.github/workflows/ci-cd.
 To finish the setup:
 
 1. Create your Render web service if it does not already exist.
-2. Set the service start command to `gunicorn run:app`.
+2. If you deploy it as a Render Docker service, Render will use the `Dockerfile` and its `CMD` automatically. If you deploy it as a native Python service, set the start command to `gunicorn run:app`.
 3. Add a GitHub secret named `RENDER_DEPLOY_HOOK_URL` with the deploy hook URL from Render.
 
 Render should also have the app environment variables set, especially `SECRET_KEY`, `ADMIN_PASSWORD`, and `DATABASE_URL`.
