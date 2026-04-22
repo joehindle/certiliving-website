@@ -27,22 +27,25 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
 
       - name: Compile Python files
         run: python -m compileall app run.py
 
       - name: Smoke test app factory
         run: flask --app run.py routes
+
+      - name: Run tests
+        run: pytest
 
   deploy:
     name: Deploy to Render

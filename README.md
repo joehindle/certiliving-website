@@ -157,8 +157,8 @@ The site will be available at `http://127.0.0.1:5000`.
 
 This repository includes a GitHub Actions workflow at [`.github/workflows/ci-cd.yml`](/Users/hindl/certiliving-website/.github/workflows/ci-cd.yml).
 
-- On pull requests, it runs a lightweight CI smoke check.
-- On pushes to `main`, it runs the same check and then triggers a Render deploy hook.
+- On pull requests, it installs dependencies, compiles the Python files, runs a Flask smoke check, and executes `pytest`.
+- On pushes to `main`, it runs the same checks and then triggers a Render deploy hook.
 
 To finish the setup:
 
