@@ -171,7 +171,7 @@ For local container runs, use a local development database and dev-only environm
 
 This repository includes a GitHub Actions workflow at [`.github/workflows/ci-cd.yml`](/Users/hindl/certiliving-website/.github/workflows/ci-cd.yml).
 
-- On pull requests, it installs dependencies, compiles the Python files, runs a Flask smoke check, and executes `pytest`.
+- On pull requests, it installs dependencies, compiles the Python files, runs a Flask smoke check, and executes `pytest` with coverage reporting.
 - On pushes to `main`, it runs the same checks and then triggers a Render deploy hook.
 
 To finish the setup:

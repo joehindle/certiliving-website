@@ -45,8 +45,8 @@ jobs:
       - name: Smoke test app factory
         run: flask --app run.py routes
 
-      - name: Run tests
-        run: pytest
+      - name: Run tests with coverage
+        run: pytest --cov=app --cov-report=term-missing --cov-report=xml
 
   deploy:
     name: Deploy to Render
