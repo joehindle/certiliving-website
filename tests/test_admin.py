@@ -1,3 +1,4 @@
+from io import BytesIO
 from types import SimpleNamespace
 
 from app import admin
@@ -126,6 +127,7 @@ def test_admin_listings_new_handles_upload_failure(client, monkeypatch):
             "city": "Leeds",
             "rent_pcm": "725",
             "description": "Fresh listing",
+            "photo_file": (BytesIO(b"not-an-image"), "listing.txt"),
         },
     )
 

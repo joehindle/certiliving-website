@@ -15,17 +15,18 @@ class DetailFakeDB:
 
     def execute(self, query, params=()):
         self.calls.append((query, params))
+        normalized_query = query.strip()
 
-        if query.startswith("SELECT * FROM listings WHERE id = %s"):
+        if normalized_query.startswith("SELECT * FROM listings WHERE id = %s"):
             return SimpleNamespace(fetchone=lambda: self.listing)
 
-        if "ORDER BY ABS(rent_pcm - %s) ASC" in query:
+        if "ORDER BY ABS(rent_pcm - %s) ASC" in normalized_query:
             return SimpleNamespace(fetchall=lambda: self.similar_listings)
 
-        if "WHERE id NOT IN" in query:
+        if "WHERE id NOT IN" in normalized_query:
             return SimpleNamespace(fetchall=lambda: self.fallback_listings)
 
-        if query.startswith("INSERT INTO enquiries"):
+        if normalized_query.startswith("INSERT INTO enquiries"):
             self.enquiries.append((query, params))
             return SimpleNamespace(fetchall=lambda: [])
 
