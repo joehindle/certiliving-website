@@ -1,6 +1,8 @@
 from io import BytesIO
 from types import SimpleNamespace
 
+from werkzeug.datastructures import MultiDict
+
 from app import admin
 
 
@@ -20,8 +22,13 @@ class AdminFakeDB:
         if query.startswith("SELECT * FROM listings WHERE id = %s"):
             return SimpleNamespace(fetchone=lambda: self.listing)
 
-        if query.startswith("SELECT photo_url FROM listings WHERE id = %s"):
-            return SimpleNamespace(fetchone=lambda: {"photo_url": self.photo_url} if self.listing else None)
+        if query.startswith("SELECT photo_url, supporting_photo_urls FROM listings WHERE id = %s"):
+            return SimpleNamespace(
+                fetchone=lambda: {
+                    "photo_url": self.photo_url,
+                    "supporting_photo_urls": (self.listing or {}).get("supporting_photo_urls", []),
+                } if self.listing else None
+            )
 
         return SimpleNamespace(fetchall=lambda: [], fetchone=lambda: self.listing)
 
@@ -55,8 +62,13 @@ def test_clean_optional_and_listing_parsers():
     assert parsed["available_from"] == "2026-09-01"
     assert parsed["description"] == "Modern studio."
 
-    preview = admin._listing_preview_from_form(form, existing_photo_url="https://example.com/photo.webp")
+    preview = admin._listing_preview_from_form(
+        form,
+        existing_photo_url="https://example.com/photo.webp",
+        existing_supporting_photo_urls=["https://example.com/support-1.webp"],
+    )
     assert preview["photo_url"] == "https://example.com/photo.webp"
+    assert preview["supporting_photo_urls"] == ["https://example.com/support-1.webp"]
     assert preview["title"] == "Central Studios"
 
 
@@ -97,16 +109,23 @@ def test_admin_listings_new_posts_listing(client, monkeypatch):
     fake_db = AdminFakeDB()
     monkeypatch.setattr("app.admin.get_db", lambda: fake_db)
     monkeypatch.setattr("app.admin._upload_listing_image", lambda _photo: "https://cdn.example.com/listings/new.webp")
+    monkeypatch.setattr(
+        "app.admin._upload_listing_images",
+        lambda _photos: ["https://cdn.example.com/listings/support-1.webp"],
+    )
 
     response = client.post(
         "/admin/listings/new",
-        data={
-            "title": "New Listing",
-            "city": "Leeds",
-            "rent_pcm": "725",
-            "room_type": "Studio",
-            "description": "Fresh listing",
-        },
+        data=MultiDict([
+            ("title", "New Listing"),
+            ("city", "Leeds"),
+            ("rent_pcm", "725"),
+            ("room_type", "Studio"),
+            ("description", "Fresh listing"),
+            ("cover_photo_file", (BytesIO(b"cover"), "cover.webp")),
+            ("supporting_photo_files", (BytesIO(b"support"), "support.webp")),
+        ]),
+        content_type="multipart/form-data",
         follow_redirects=False,
     )
 
@@ -127,12 +146,33 @@ def test_admin_listings_new_handles_upload_failure(client, monkeypatch):
             "city": "Leeds",
             "rent_pcm": "725",
             "description": "Fresh listing",
-            "photo_file": (BytesIO(b"not-an-image"), "listing.txt"),
+            "cover_photo_file": (BytesIO(b"not-an-image"), "listing.txt"),
         },
     )
 
     assert response.status_code == 200
     assert b"Image upload failed" in response.data
+
+
+def test_admin_listings_new_requires_cover_photo(client, monkeypatch):
+    _login_as_admin(client)
+    fake_db = AdminFakeDB()
+    monkeypatch.setattr("app.admin.get_db", lambda: fake_db)
+
+    response = client.post(
+        "/admin/listings/new",
+        data={
+            "title": "New Listing",
+            "city": "Leeds",
+            "rent_pcm": "725",
+            "description": "Fresh listing",
+        },
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+    assert b"Cover photo is required." in response.data
+    assert not any(query.startswith("INSERT INTO listings") for query, _ in fake_db.calls)
 
 
 def test_admin_listings_edit_updates_listing(client, monkeypatch):
@@ -143,6 +183,7 @@ def test_admin_listings_edit_updates_listing(client, monkeypatch):
         "city": "Leeds",
         "rent_pcm": 650,
         "photo_url": "https://cdn.example.com/listings/old.webp",
+        "supporting_photo_urls": ["https://cdn.example.com/listings/support-old.webp"],
         "room_type": "Studio",
         "bills_included": True,
         "available_from": "2026-09-01",
@@ -163,6 +204,7 @@ def test_admin_listings_edit_updates_listing(client, monkeypatch):
             "room_type": "Studio",
             "description": "Updated description",
         },
+        content_type="multipart/form-data",
         follow_redirects=False,
     )
 
@@ -173,13 +215,22 @@ def test_admin_listings_edit_updates_listing(client, monkeypatch):
 
 def test_admin_listings_delete_removes_listing(client, monkeypatch):
     _login_as_admin(client)
-    fake_db = AdminFakeDB(listing={"photo_url": "https://cdn.example.com/listings/old.webp"})
+    fake_db = AdminFakeDB(
+        listing={
+            "photo_url": "https://cdn.example.com/listings/old.webp",
+            "supporting_photo_urls": ["https://cdn.example.com/listings/support-old.webp"],
+        }
+    )
     monkeypatch.setattr("app.admin.get_db", lambda: fake_db)
     deleted = []
     monkeypatch.setattr("app.admin._delete_r2_image", lambda photo_url: deleted.append(photo_url))
+    monkeypatch.setattr("app.admin._delete_r2_images", lambda photo_urls: deleted.extend(photo_urls))
 
     response = client.post("/admin/listings/1/delete", follow_redirects=False)
 
     assert response.status_code == 302
-    assert deleted == ["https://cdn.example.com/listings/old.webp"]
+    assert deleted == [
+        "https://cdn.example.com/listings/old.webp",
+        "https://cdn.example.com/listings/support-old.webp",
+    ]
     assert any(query.startswith("DELETE FROM listings") for query, _ in fake_db.calls)

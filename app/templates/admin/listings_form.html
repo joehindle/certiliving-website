@@ -17,13 +17,27 @@
            value="{{ listing['rent_pcm'] if listing else '' }}">
 
     <label class="admin-field">
-      <span>Listing image</span>
-      <input name="photo_file" type="file" accept="image/*">
+      <span>Cover photo</span>
+      <input name="cover_photo_file" type="file" accept="image/*">
     </label>
 
     {% if listing and listing['photo_url'] %}
-    <p class="admin-hint">Current image:</p>
+    <p class="admin-hint">Current cover photo:</p>
     <img class="admin-image-preview" src="{{ listing['photo_url'] }}" alt="Current listing image">
+    {% endif %}
+
+    <label class="admin-field">
+      <span>Supporting photos</span>
+      <input name="supporting_photo_files" type="file" accept="image/*" multiple>
+    </label>
+
+    {% if listing and listing['supporting_photo_urls'] %}
+    <p class="admin-hint">Current supporting photos:</p>
+    <div class="admin-supporting-grid">
+      {% for photo_url in listing['supporting_photo_urls'] %}
+      <img class="admin-image-preview admin-image-preview-small" src="{{ photo_url }}" alt="Supporting listing image {{ loop.index }}">
+      {% endfor %}
+    </div>
     {% endif %}
 
     <input name="room_type" placeholder="Room type (Ensuite/Studio/Shared)"

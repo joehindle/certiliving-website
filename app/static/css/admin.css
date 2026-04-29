@@ -78,6 +78,16 @@
   display: block;
 }
 
+.admin-image-preview-small {
+  max-width: 180px;
+}
+
+.admin-supporting-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .admin-checkbox {
   display: flex;
   align-items: center;

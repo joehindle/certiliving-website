@@ -55,6 +55,22 @@ def test_validate_enquiry_form_accepts_valid_input():
     assert listings._validate_enquiry_form("Name", "test@example.com", "Hello") is None
 
 
+def test_listing_image_urls_prefers_cover_then_supporting_photos():
+    listing = {
+        "photo_url": "https://cdn.example.com/listings/cover.webp",
+        "supporting_photo_urls": [
+            "https://cdn.example.com/listings/support-1.webp",
+            "https://cdn.example.com/listings/support-2.webp",
+        ],
+    }
+
+    assert listings._listing_image_urls(listing) == [
+        "https://cdn.example.com/listings/cover.webp",
+        "https://cdn.example.com/listings/support-1.webp",
+        "https://cdn.example.com/listings/support-2.webp",
+    ]
+
+
 def test_detail_route_returns_404_when_listing_missing(client, monkeypatch):
     fake_db = DetailFakeDB(None)
     monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
@@ -70,6 +86,8 @@ def test_detail_route_saves_enquiry_and_redirects(client, monkeypatch):
         "title": "Central Studios",
         "city": "Leeds",
         "rent_pcm": 650,
+        "photo_url": "https://cdn.example.com/listings/cover.webp",
+        "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
     monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
@@ -95,6 +113,8 @@ def test_detail_route_rejects_invalid_enquiry(client, monkeypatch):
         "title": "Central Studios",
         "city": "Leeds",
         "rent_pcm": 650,
+        "photo_url": "https://cdn.example.com/listings/cover.webp",
+        "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing)
     monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
@@ -118,6 +138,8 @@ def test_detail_route_handles_email_failure(client, monkeypatch):
         "title": "Central Studios",
         "city": "Leeds",
         "rent_pcm": 650,
+        "photo_url": "https://cdn.example.com/listings/cover.webp",
+        "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
     monkeypatch.setattr("app.listings.get_db", lambda: fake_db)

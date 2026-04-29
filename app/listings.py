@@ -19,6 +19,24 @@ DEFAULT_SORT = 'newest'
 DEFAULT_PER_PAGE = 9
 ALLOWED_PER_PAGE = {4, 6, 9}
 SIMILAR_LISTINGS_LIMIT = 6
+PLACEHOLDER_DETAIL_IMAGE = 'https://via.placeholder.com/900x600'
+
+
+def _listing_image_urls(listing):
+    image_urls = []
+
+    cover_photo_url = listing.get('photo_url')
+    if cover_photo_url:
+        image_urls.append(cover_photo_url)
+
+    supporting_photo_urls = listing.get('supporting_photo_urls') or []
+    if isinstance(supporting_photo_urls, str):
+        supporting_photo_urls = [supporting_photo_urls]
+    image_urls.extend(
+        photo_url for photo_url in supporting_photo_urls if photo_url
+    )
+
+    return image_urls or [PLACEHOLDER_DETAIL_IMAGE]
 
 
 def _validate_enquiry_form(name, email, message):
@@ -287,6 +305,8 @@ def detail(listing_id):
     if listing is None:
         abort(404)
 
+    listing_images = _listing_image_urls(listing)
+
     similar_listings = db.execute(
         """
         SELECT *
@@ -350,5 +370,6 @@ def detail(listing_id):
     return render_template(
         'listings/detail.html',
         listing=listing,
+        listing_images=listing_images,
         similar_listings=similar_listings,
     )

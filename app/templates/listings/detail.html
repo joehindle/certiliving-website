@@ -9,9 +9,28 @@
   <section class="detail-main">
 
     <div class="detail-hero">
-      <img class="detail-image"
-           src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/900x600' }}"
-           alt="{{ listing['title'] }}">
+      <div class="detail-carousel-frame" data-carousel>
+        {% for image_url in listing_images %}
+        <img class="detail-image detail-carousel-slide{% if loop.first %} is-active{% endif %}"
+             data-carousel-slide
+             src="{{ image_url }}"
+             alt="{{ listing['title'] }} image {{ loop.index }}">
+        {% endfor %}
+      </div>
+      {% if listing_images|length > 1 %}
+      <button class="detail-carousel-nav prev" type="button" data-carousel-prev aria-label="Previous image">&larr;</button>
+      <button class="detail-carousel-nav next" type="button" data-carousel-next aria-label="Next image">&rarr;</button>
+      <div class="detail-carousel-counter" data-carousel-counter></div>
+      <div class="detail-carousel-dots" data-carousel-dots>
+        {% for image_url in listing_images %}
+        <button class="detail-carousel-dot{% if loop.first %} is-active{% endif %}"
+                type="button"
+                data-carousel-dot
+                data-carousel-index="{{ loop.index0 }}"
+                aria-label="Show image {{ loop.index }}"></button>
+        {% endfor %}
+      </div>
+      {% endif %}
       <div class="detail-hero-gradient"></div>
       <div class="detail-price-badge">&pound;{{ listing['rent_pcm'] }} PCM</div>
     </div>
@@ -117,9 +136,60 @@
 
 <script>
 (() => {
+  const carousel = document.querySelector("[data-carousel]");
+  if (carousel) {
+    const slides = Array.from(carousel.querySelectorAll("[data-carousel-slide]"));
+    const prevButton = carousel.querySelector("[data-carousel-prev]");
+    const nextButton = carousel.querySelector("[data-carousel-next]");
+    const counter = carousel.querySelector("[data-carousel-counter]");
+    const dots = Array.from(carousel.querySelectorAll("[data-carousel-dot]"));
+
+    if (slides.length > 0) {
+      let currentIndex = 0;
+
+      const updateCarousel = () => {
+        slides.forEach((slide, index) => {
+          slide.classList.toggle("is-active", index === currentIndex);
+          slide.setAttribute("aria-hidden", index === currentIndex ? "false" : "true");
+        });
+
+        dots.forEach((dot, index) => {
+          dot.classList.toggle("is-active", index === currentIndex);
+          dot.setAttribute("aria-pressed", index === currentIndex ? "true" : "false");
+        });
+
+        if (counter) {
+          counter.textContent = `${currentIndex + 1} / ${slides.length}`;
+        }
+      };
+
+      const goToSlide = (nextIndex) => {
+        currentIndex = (nextIndex + slides.length) % slides.length;
+        updateCarousel();
+      };
+
+      if (prevButton) {
+        prevButton.addEventListener("click", () => goToSlide(currentIndex - 1));
+      }
+
+      if (nextButton) {
+        nextButton.addEventListener("click", () => goToSlide(currentIndex + 1));
+      }
+
+      dots.forEach((dot) => {
+        dot.addEventListener("click", () => {
+          const index = Number(dot.dataset.carouselIndex || 0);
+          goToSlide(index);
+        });
+      });
+
+      updateCarousel();
+    }
+  }
+
   const messageInput = document.querySelector("[data-enquiry-message]");
-  const counter = document.querySelector("[data-char-counter]");
-  if (!messageInput || !counter) return;
+  const messageCounter = document.querySelector("[data-char-counter]");
+  if (!messageInput || !messageCounter) return;
 
   const maxLength = 1500;
 
@@ -129,13 +199,13 @@
     }
 
     const length = messageInput.value.length;
-    counter.textContent = `${length} / ${maxLength}`;
-    counter.classList.remove("is-warning", "is-danger");
+    messageCounter.textContent = `${length} / ${maxLength}`;
+    messageCounter.classList.remove("is-warning", "is-danger");
 
     if (length >= maxLength) {
-      counter.classList.add("is-danger");
+      messageCounter.classList.add("is-danger");
     } else if (length >= 1300) {
-      counter.classList.add("is-warning");
+      messageCounter.classList.add("is-warning");
     }
   };
 

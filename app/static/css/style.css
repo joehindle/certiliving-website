@@ -472,6 +472,7 @@ main { flex: 1; }
   overflow: hidden;
   box-shadow: var(--shadow);
   margin-bottom: 18px;
+  background: #0f172a;
 }
 
 .detail-image {
@@ -479,6 +480,96 @@ main { flex: 1; }
   height: 340px;
   object-fit: cover;
   display: block;
+}
+
+.detail-carousel-frame {
+  position: relative;
+  min-height: 340px;
+}
+
+.detail-carousel-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.detail-carousel-slide.is-active {
+  opacity: 1;
+}
+
+.detail-carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3;
+  width: 42px;
+  height: 42px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(17, 24, 39, 0.75);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-soft);
+}
+
+.detail-carousel-nav:hover {
+  background: rgba(17, 24, 39, 0.92);
+}
+
+.detail-carousel-nav.prev {
+  left: 14px;
+}
+
+.detail-carousel-nav.next {
+  right: 14px;
+}
+
+.detail-carousel-counter {
+  position: absolute;
+  right: 14px;
+  bottom: 54px;
+  z-index: 3;
+  background: rgba(17, 24, 39, 0.78);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.detail-carousel-dots {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 16px;
+  z-index: 3;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.detail-carousel-dot {
+  width: 10px;
+  height: 10px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 0;
+}
+
+.detail-carousel-dot.is-active {
+  background: #fff;
+  transform: scale(1.2);
 }
 
 .detail-hero-gradient {
@@ -677,7 +768,12 @@ main { flex: 1; }
   }
   .detail-grid { grid-template-columns: 1fr; }
   .detail-aside { position: static; }
-  .detail-image { height: 260px; }
+  .detail-image,
+  .detail-carousel-frame { min-height: 260px; }
+  .detail-carousel-nav {
+    width: 36px;
+    height: 36px;
+  }
 }
 
 @media (max-width: 650px) {

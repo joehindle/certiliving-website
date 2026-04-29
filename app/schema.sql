@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS listings (
     available_from DATE,
 
     photo_url TEXT,
+    supporting_photo_urls TEXT[] DEFAULT '{}'::TEXT[],
 
     created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

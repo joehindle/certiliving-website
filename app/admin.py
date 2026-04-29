@@ -32,12 +32,27 @@ def _parse_listing_form(form):
     }
 
 
-def _listing_preview_from_form(form, existing_photo_url=None):
+def _normalize_supporting_photo_urls(photo_urls):
+    if not photo_urls:
+        return []
+    if isinstance(photo_urls, str):
+        return [photo_urls]
+    return [photo_url for photo_url in photo_urls if photo_url]
+
+
+def _listing_preview_from_form(
+    form,
+    existing_photo_url=None,
+    existing_supporting_photo_urls=None,
+):
     return {
         "title": (form.get("title") or "").strip(),
         "city": (form.get("city") or "").strip(),
         "rent_pcm": (form.get("rent_pcm") or "").strip(),
         "photo_url": existing_photo_url,
+        "supporting_photo_urls": _normalize_supporting_photo_urls(
+            existing_supporting_photo_urls
+        ),
         "room_type": _clean_optional(form.get("room_type")),
         "bills_included": form.get("bills_included") == "on",
         "available_from": _clean_optional(form.get("available_from")),
@@ -122,6 +137,47 @@ def _delete_r2_image(photo_url):
         current_app.logger.exception("Failed to delete R2 image: %s", photo_url)
 
 
+def _delete_r2_images(photo_urls):
+    for photo_url in photo_urls or []:
+        _delete_r2_image(photo_url)
+
+
+def _upload_listing_images(photo_files):
+    uploaded_urls = []
+    for photo_file in photo_files or []:
+        if photo_file and photo_file.filename:
+            uploaded_urls.append(_upload_listing_image(photo_file))
+    return uploaded_urls
+
+
+def _process_listing_images(
+    cover_photo_file=None,
+    supporting_photo_files=None,
+    existing_cover_photo_url=None,
+    existing_supporting_photo_urls=None,
+):
+    uploaded_urls = []
+    cover_photo_url = existing_cover_photo_url
+    supporting_photo_urls = _normalize_supporting_photo_urls(
+        existing_supporting_photo_urls
+    )
+
+    try:
+        if cover_photo_file and cover_photo_file.filename:
+            cover_photo_url = _upload_listing_image(cover_photo_file)
+            uploaded_urls.append(cover_photo_url)
+        elif not cover_photo_url:
+            raise ValueError("Cover photo is required.")
+
+        new_supporting_photo_urls = _upload_listing_images(supporting_photo_files)
+        uploaded_urls.extend(new_supporting_photo_urls)
+        supporting_photo_urls.extend(new_supporting_photo_urls)
+        return cover_photo_url, supporting_photo_urls
+    except Exception:
+        _delete_r2_images(uploaded_urls)
+        raise
+
+
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
@@ -166,26 +222,30 @@ def listings_index():
 def listings_new():
     if request.method == "POST":
         listing_data = _parse_listing_form(request.form)
-        photo_url = None
-        photo_file = request.files.get("photo_file")
-        if photo_file and photo_file.filename:
-            try:
-                photo_url = _upload_listing_image(photo_file)
-            except Exception as exc:
-                flash(f"Image upload failed: {exc}", "error")
-                listing_preview = _listing_preview_from_form(request.form)
-                return render_template("admin/listings_form.html", listing=listing_preview)
+        cover_photo_file = request.files.get("cover_photo_file")
+        supporting_photo_files = request.files.getlist("supporting_photo_files")
+
+        try:
+            photo_url, supporting_photo_urls = _process_listing_images(
+                cover_photo_file=cover_photo_file,
+                supporting_photo_files=supporting_photo_files,
+            )
+        except Exception as exc:
+            flash(f"Image upload failed: {exc}", "error")
+            listing_preview = _listing_preview_from_form(request.form)
+            return render_template("admin/listings_form.html", listing=listing_preview)
 
         db = get_db()
         db.execute(
             """INSERT INTO listings
-               (title, city, rent_pcm, photo_url, room_type, bills_included, available_from, description)
-               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
+               (title, city, rent_pcm, photo_url, supporting_photo_urls, room_type, bills_included, available_from, description)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
             (
                 listing_data["title"],
                 listing_data["city"],
                 listing_data["rent_pcm"],
                 photo_url,
+                supporting_photo_urls,
                 listing_data["room_type"],
                 listing_data["bills_included"],
                 listing_data["available_from"],
@@ -208,29 +268,40 @@ def listings_edit(listing_id):
     if request.method == "POST":
         listing_data = _parse_listing_form(request.form)
         photo_url = listing["photo_url"]
-        photo_file = request.files.get("photo_file")
-        if photo_file and photo_file.filename:
-            try:
-                new_photo_url = _upload_listing_image(photo_file)
-            except Exception as exc:
-                flash(f"Image upload failed: {exc}", "error")
-                listing_preview = _listing_preview_from_form(
-                    request.form,
-                    existing_photo_url=listing["photo_url"],
-                )
-                return render_template("admin/listings_form.html", listing=listing_preview)
-            _delete_r2_image(listing["photo_url"])
-            photo_url = new_photo_url
+        supporting_photo_urls = _normalize_supporting_photo_urls(
+            listing.get("supporting_photo_urls")
+        )
+        cover_photo_file = request.files.get("cover_photo_file")
+        supporting_photo_files = request.files.getlist("supporting_photo_files")
+
+        try:
+            new_photo_url, new_supporting_photo_urls = _process_listing_images(
+                cover_photo_file=cover_photo_file,
+                supporting_photo_files=supporting_photo_files,
+                existing_cover_photo_url=photo_url,
+                existing_supporting_photo_urls=supporting_photo_urls,
+            )
+        except Exception as exc:
+            flash(f"Image upload failed: {exc}", "error")
+            listing_preview = _listing_preview_from_form(
+                request.form,
+                existing_photo_url=listing["photo_url"],
+                existing_supporting_photo_urls=listing.get("supporting_photo_urls"),
+            )
+            return render_template("admin/listings_form.html", listing=listing_preview)
+        photo_url = new_photo_url
+        supporting_photo_urls = new_supporting_photo_urls
 
         db.execute(
             """UPDATE listings
-               SET title=%s, city=%s, rent_pcm=%s, photo_url=%s, room_type=%s, bills_included=%s, available_from=%s, description=%s
+               SET title=%s, city=%s, rent_pcm=%s, photo_url=%s, supporting_photo_urls=%s, room_type=%s, bills_included=%s, available_from=%s, description=%s
                WHERE id=%s""",
             (
                 listing_data["title"],
                 listing_data["city"],
                 listing_data["rent_pcm"],
                 photo_url,
+                supporting_photo_urls,
                 listing_data["room_type"],
                 listing_data["bills_included"],
                 listing_data["available_from"],
@@ -247,8 +318,13 @@ def listings_edit(listing_id):
 @admin_required
 def listings_delete(listing_id):
     db = get_db()
-    listing = db.execute("SELECT photo_url FROM listings WHERE id = %s", (listing_id,)).fetchone()
-    _delete_r2_image(listing["photo_url"] if listing else None)
+    listing = db.execute(
+        "SELECT photo_url, supporting_photo_urls FROM listings WHERE id = %s",
+        (listing_id,),
+    ).fetchone()
+    if listing:
+        _delete_r2_image(listing["photo_url"])
+        _delete_r2_images(listing.get("supporting_photo_urls"))
     db.execute("DELETE FROM listings WHERE id = %s", (listing_id,))
     db.commit()
     return redirect(url_for("admin.listings_index"))
