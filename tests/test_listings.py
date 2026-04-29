@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+import json
 
 import pytest
 
@@ -71,6 +72,42 @@ def test_listing_image_urls_prefers_cover_then_supporting_photos():
     ]
 
 
+def test_verify_turnstile_token_accepts_valid_response(app, monkeypatch):
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            return json.dumps({"success": True}).encode("utf-8")
+
+    monkeypatch.setattr("app.listings.urlopen", lambda *_args, **_kwargs: FakeResponse())
+
+    with app.test_request_context("/"):
+        app.config.update(
+            TURNSTILE_SITE_KEY="site-key",
+            TURNSTILE_SECRET_KEY="secret-key",
+        )
+        ok, errors = listings._verify_turnstile_token("token-value", "127.0.0.1")
+
+    assert ok is True
+    assert errors == []
+
+
+def test_verify_turnstile_token_rejects_missing_token(app):
+    with app.test_request_context("/"):
+        app.config.update(
+            TURNSTILE_SITE_KEY="site-key",
+            TURNSTILE_SECRET_KEY="secret-key",
+        )
+        ok, errors = listings._verify_turnstile_token("", "127.0.0.1")
+
+    assert ok is False
+    assert errors == ["missing-input-response"]
+
+
 def test_detail_route_returns_404_when_listing_missing(client, monkeypatch):
     fake_db = DetailFakeDB(None)
     monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
@@ -105,6 +142,33 @@ def test_detail_route_saves_enquiry_and_redirects(client, monkeypatch):
 
     assert response.status_code == 302
     assert fake_db.enquiries
+
+
+def test_detail_route_blocks_honeypot_submission(client, monkeypatch):
+    listing = {
+        "id": 1,
+        "title": "Central Studios",
+        "city": "Leeds",
+        "rent_pcm": 650,
+        "photo_url": "https://cdn.example.com/listings/cover.webp",
+        "supporting_photo_urls": [],
+    }
+    fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
+    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+
+    response = client.post(
+        "/listings/1",
+        data={
+            "name": "Alice",
+            "email": "alice@example.com",
+            "message": "I am interested in this property.",
+            "website": "spammy-site.example",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert not fake_db.enquiries
 
 
 def test_detail_route_rejects_invalid_enquiry(client, monkeypatch):

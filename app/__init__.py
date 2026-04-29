@@ -20,6 +20,8 @@ def create_app(test_config=None):
         RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
         RESEND_FROM_EMAIL=os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev"),
         ENQUIRY_TO_EMAIL=os.environ.get("ENQUIRY_TO_EMAIL", "team@certiliving.co.uk"),
+        TURNSTILE_SITE_KEY=os.environ.get("TURNSTILE_SITE_KEY"),
+        TURNSTILE_SECRET_KEY=os.environ.get("TURNSTILE_SECRET_KEY"),
         R2_ACCOUNT_ID=os.environ.get("R2_ACCOUNT_ID"),
         R2_ACCESS_KEY_ID=os.environ.get("R2_ACCESS_KEY_ID"),
         R2_SECRET_ACCESS_KEY=os.environ.get("R2_SECRET_ACCESS_KEY"),
@@ -53,7 +55,13 @@ def create_app(test_config=None):
         if token is None:
             token = secrets.token_urlsafe(32)
             session["_csrf_token"] = token
-        return {"csrf_token": token}
+        turnstile_site_key = app.config.get("TURNSTILE_SITE_KEY")
+        turnstile_secret_key = app.config.get("TURNSTILE_SECRET_KEY")
+        return {
+            "csrf_token": token,
+            "turnstile_site_key": turnstile_site_key,
+            "turnstile_enabled": bool(turnstile_site_key and turnstile_secret_key),
+        }
 
     @app.before_request
     def csrf_protect():

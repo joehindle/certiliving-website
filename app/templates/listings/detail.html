@@ -62,6 +62,12 @@
 
       <form method="post" class="enquiry-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="honeypot-field" aria-hidden="true">
+          <label>
+            <span>Website</span>
+            <input name="website" type="text" tabindex="-1" autocomplete="off">
+          </label>
+        </div>
         <label class="field">
           <span>Your name</span>
           <input name="name" placeholder="Your full name" required>
@@ -77,6 +83,12 @@
           <textarea name="message" rows="5" maxlength="1500" placeholder="Hi, is this still available? When can I view?" required data-enquiry-message></textarea>
           <small class="char-counter" data-char-counter aria-live="polite">0 / 1500 (recommended 300-800)</small>
         </label>
+
+        {% if turnstile_enabled and turnstile_site_key %}
+        <div class="turnstile-widget">
+          <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-size="flexible"></div>
+        </div>
+        {% endif %}
 
         <button class="primary-btn" type="submit">Send Enquiry</button>
       </form>
@@ -133,6 +145,10 @@
 </div>
 {% endif %}
 </div>
+
+{% if turnstile_enabled and turnstile_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
 
 <script>
 (() => {

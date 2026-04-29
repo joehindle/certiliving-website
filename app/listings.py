@@ -3,8 +3,11 @@ from flask import (
 )
 
 import html
+import json
 import re
+from urllib.error import URLError
 from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
 import resend
 from werkzeug.exceptions import abort
@@ -20,6 +23,7 @@ DEFAULT_PER_PAGE = 9
 ALLOWED_PER_PAGE = {4, 6, 9}
 SIMILAR_LISTINGS_LIMIT = 6
 PLACEHOLDER_DETAIL_IMAGE = 'https://via.placeholder.com/900x600'
+ENQUIRY_RATE_LIMITS = ("5 per minute", "30 per hour")
 
 
 def _listing_image_urls(listing):
@@ -53,6 +57,45 @@ def _validate_enquiry_form(name, email, message):
     if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
         return "Invalid email address."
     return None
+
+
+def _is_spam_enquiry_submission(form):
+    # Honeypot field: real users should leave it empty.
+    return bool((form.get("website") or "").strip())
+
+
+def _verify_turnstile_token(token, remoteip=None):
+    secret_key = current_app.config.get("TURNSTILE_SECRET_KEY")
+    site_key = current_app.config.get("TURNSTILE_SITE_KEY")
+    if not secret_key or not site_key:
+        return True, []
+
+    if not token:
+        return False, ["missing-input-response"]
+
+    payload = {
+        "secret": secret_key,
+        "response": token,
+    }
+    if remoteip:
+        payload["remoteip"] = remoteip
+
+    request_data = urlencode(payload).encode("utf-8")
+    request_obj = Request(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        data=request_data,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+
+    try:
+        with urlopen(request_obj, timeout=10) as response:
+            result = json.loads(response.read().decode("utf-8"))
+    except (URLError, TimeoutError, ValueError, json.JSONDecodeError):
+        current_app.logger.exception("Turnstile validation failed")
+        return False, ["internal-error"]
+
+    return bool(result.get("success")), result.get("error-codes", [])
 
 
 def _send_enquiry_email(listing, name, email, message):
@@ -294,6 +337,8 @@ def all_listings():
 
 
 @bp.route('/listings/<int:listing_id>', methods=('GET', 'POST'))
+@limiter.limit(ENQUIRY_RATE_LIMITS[0], methods=["POST"])
+@limiter.limit(ENQUIRY_RATE_LIMITS[1], methods=["POST"])
 def detail(listing_id):
     db = get_db()
 
@@ -337,6 +382,28 @@ def detail(listing_id):
 
     # Handle enquiry form submission
     if request.method == 'POST':
+        if _is_spam_enquiry_submission(request.form):
+            current_app.logger.warning(
+                "Blocked spam enquiry submission for listing_id=%s", listing_id
+            )
+            return redirect(url_for('listings.detail', listing_id=listing_id))
+
+        turnstile_token = request.form.get("cf-turnstile-response", "").strip()
+        remoteip = (
+            request.headers.get("CF-Connecting-IP")
+            or request.headers.get("X-Forwarded-For", "").split(",")[0].strip()
+            or request.remote_addr
+        )
+        is_human, turnstile_errors = _verify_turnstile_token(turnstile_token, remoteip)
+        if not is_human:
+            current_app.logger.warning(
+                "Blocked invalid Turnstile submission for listing_id=%s errors=%s",
+                listing_id,
+                turnstile_errors,
+            )
+            flash("Please complete the security check and try again.", "error")
+            return redirect(url_for('listings.detail', listing_id=listing_id))
+
         name = request.form.get('name', '').strip()
         email = request.form.get('email', '').strip()
         message = request.form.get('message', '').strip()
