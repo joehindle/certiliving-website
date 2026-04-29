@@ -13,6 +13,7 @@ import resend
 from werkzeug.exceptions import abort
 
 from .db import get_db
+from .extensions import limiter
 
 bp = Blueprint('listings', __name__)
 
