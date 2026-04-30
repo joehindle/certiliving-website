@@ -472,7 +472,7 @@ main { flex: 1; }
   overflow: hidden;
   box-shadow: var(--shadow);
   margin-bottom: 18px;
-  background: #0f172a;
+  background: var(--bg);
 }
 
 .detail-carousel-frame {
@@ -482,7 +482,7 @@ main { flex: 1; }
   max-height: 760px;
   min-height: 0;
   overflow: hidden;
-  background: #0f172a;
+  background: var(--bg);
 }
 
 .detail-carousel-image {
@@ -490,7 +490,7 @@ main { flex: 1; }
   height: 100%;
   object-fit: contain;
   display: block;
-  background: #0f172a;
+  background: var(--bg);
 }
 
 .detail-carousel-overlay {

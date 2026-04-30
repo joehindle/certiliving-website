@@ -8,16 +8,17 @@
     const nextButton = carousel.querySelector("[data-carousel-next]");
     const counter = carousel.querySelector("[data-carousel-counter]");
     const imagesScript = carousel.querySelector("[data-carousel-images]");
+    const enquiryCard = document.querySelector(".enquiry-card");
 
     if (frame) {
       frame.style.position = "relative";
       frame.style.width = "100%";
       frame.style.aspectRatio = "1 / 1";
-      frame.style.maxHeight = "760px";
+      frame.style.maxHeight = "none";
       frame.style.height = "auto";
       frame.style.minHeight = "0";
       frame.style.overflow = "hidden";
-      frame.style.background = "#0f172a";
+      frame.style.background = "var(--bg)";
     }
 
     if (overlay) {
@@ -35,7 +36,7 @@
       image.style.height = "100%";
       image.style.objectFit = "contain";
       image.style.display = "block";
-      image.style.background = "#0f172a";
+      image.style.background = "var(--bg)";
     }
 
     if (prevButton) {
@@ -102,10 +103,18 @@
 
     const syncFrameSizing = () => {
       if (!frame) return;
-      frame.style.aspectRatio = "1 / 1";
-      frame.style.height = "auto";
-      frame.style.minHeight = "0";
-      frame.style.maxHeight = window.innerWidth <= 900 ? "none" : "760px";
+      if (window.innerWidth <= 900 || !enquiryCard) {
+        frame.style.aspectRatio = "1 / 1";
+        frame.style.height = "auto";
+        frame.style.minHeight = "0";
+        frame.style.maxHeight = "none";
+      } else {
+        const cardHeight = Math.round(enquiryCard.getBoundingClientRect().height);
+        frame.style.aspectRatio = "auto";
+        frame.style.height = `${cardHeight}px`;
+        frame.style.minHeight = `${cardHeight}px`;
+        frame.style.maxHeight = `${cardHeight}px`;
+      }
       if (image) {
         image.style.objectFit = "contain";
       }
@@ -113,6 +122,10 @@
 
     syncFrameSizing();
     window.addEventListener("resize", syncFrameSizing);
+    if (window.ResizeObserver && enquiryCard) {
+      const observer = new ResizeObserver(() => syncFrameSizing());
+      observer.observe(enquiryCard);
+    }
 
     if (image && imagesScript) {
       let images = [];
