@@ -490,11 +490,17 @@ main { flex: 1; }
   display: block;
 }
 
-.detail-carousel-nav {
+.detail-carousel-overlay {
   position: absolute;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
+  inset: 0;
   z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.detail-carousel-nav {
   width: 48px;
   height: 48px;
   border: none;
@@ -512,6 +518,7 @@ main { flex: 1; }
   -webkit-appearance: none;
   text-decoration: none;
   line-height: 1;
+  pointer-events: auto;
 }
 
 .detail-carousel-nav:hover {
@@ -519,18 +526,17 @@ main { flex: 1; }
 }
 
 .detail-carousel-nav.prev {
-  left: 16px;
+  margin-left: 16px;
 }
 
 .detail-carousel-nav.next {
-  right: 16px;
+  margin-right: 16px;
 }
 
 .detail-carousel-counter {
   position: absolute;
-  right: 14px;
-  bottom: 54px;
-  z-index: 3;
+  left: 14px;
+  bottom: 14px;
   background: rgba(17, 24, 39, 0.78);
   color: #fff;
   padding: 6px 10px;

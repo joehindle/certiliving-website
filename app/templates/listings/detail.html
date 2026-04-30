@@ -17,9 +17,11 @@
              src="{{ current_image_url }}"
              alt="{{ listing['title'] }} image {{ current_image_index + 1 }}">
         {% if listing_images|length > 1 %}
-        <button class="detail-carousel-nav prev" type="button" data-carousel-prev aria-label="Previous image">&larr;</button>
-        <button class="detail-carousel-nav next" type="button" data-carousel-next aria-label="Next image">&rarr;</button>
-        <div class="detail-carousel-counter" data-carousel-counter>{{ current_image_index + 1 }} / {{ listing_images|length }}</div>
+        <div class="detail-carousel-overlay">
+          <button class="detail-carousel-nav prev" type="button" data-carousel-prev aria-label="Previous image">&larr;</button>
+          <button class="detail-carousel-nav next" type="button" data-carousel-next aria-label="Next image">&rarr;</button>
+          <div class="detail-carousel-counter" data-carousel-counter>{{ current_image_index + 1 }} / {{ listing_images|length }}</div>
+        </div>
         {% endif %}
       </div>
       <div class="detail-hero-gradient"></div>
