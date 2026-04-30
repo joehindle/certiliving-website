@@ -17,7 +17,7 @@
              src="{{ current_image_url }}"
              alt="{{ listing['title'] }} image {{ current_image_index + 1 }}">
         {% if listing_images|length > 1 %}
-        <div class="detail-carousel-overlay">
+        <div class="detail-carousel-overlay" data-carousel-overlay>
           <button class="detail-carousel-nav prev" type="button" data-carousel-prev aria-label="Previous image">&larr;</button>
           <button class="detail-carousel-nav next" type="button" data-carousel-next aria-label="Next image">&rarr;</button>
           <div class="detail-carousel-counter" data-carousel-counter>{{ current_image_index + 1 }} / {{ listing_images|length }}</div>
@@ -142,81 +142,6 @@
 {% if turnstile_enabled and turnstile_site_key %}
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 {% endif %}
-
-<script>
-(() => {
-  const carousel = document.querySelector("[data-carousel]");
-  if (carousel) {
-    const image = carousel.querySelector("[data-carousel-image]");
-    const prevButton = carousel.querySelector("[data-carousel-prev]");
-    const nextButton = carousel.querySelector("[data-carousel-next]");
-    const counter = carousel.querySelector("[data-carousel-counter]");
-    const imagesScript = carousel.querySelector("[data-carousel-images]");
-
-    if (image && imagesScript) {
-      let images = [];
-      try {
-        images = JSON.parse(imagesScript.textContent || "[]");
-      } catch (_error) {
-        images = [];
-      }
-
-      if (images.length > 0) {
-        let currentIndex = {{ current_image_index }};
-        const listingTitle = image.dataset.listingTitle || "Listing";
-
-        const updateCarousel = () => {
-          image.src = images[currentIndex];
-          image.alt = `${listingTitle} image ${currentIndex + 1}`;
-          if (counter) {
-            counter.textContent = `${currentIndex + 1} / ${images.length}`;
-          }
-        };
-
-        if (prevButton) {
-          prevButton.addEventListener("click", () => {
-            currentIndex = (currentIndex - 1 + images.length) % images.length;
-            updateCarousel();
-          });
-        }
-
-        if (nextButton) {
-          nextButton.addEventListener("click", () => {
-            currentIndex = (currentIndex + 1) % images.length;
-            updateCarousel();
-          });
-        }
-
-        updateCarousel();
-      }
-    }
-  }
-
-  const messageInput = document.querySelector("[data-enquiry-message]");
-  const messageCounter = document.querySelector("[data-char-counter]");
-  if (!messageInput || !messageCounter) return;
-
-  const maxLength = 1500;
-
-  const updateCounter = () => {
-    if (messageInput.value.length > maxLength) {
-      messageInput.value = messageInput.value.slice(0, maxLength);
-    }
-
-    const length = messageInput.value.length;
-    messageCounter.textContent = `${length} / ${maxLength}`;
-    messageCounter.classList.remove("is-warning", "is-danger");
-
-    if (length >= maxLength) {
-      messageCounter.classList.add("is-danger");
-    } else if (length >= 1300) {
-      messageCounter.classList.add("is-warning");
-    }
-  };
-
-  messageInput.addEventListener("input", updateCounter);
-  updateCounter();
-})();
-</script>
+<script src="{{ url_for('static', filename='js/detail-carousel.js') }}" defer></script>
 
 {% endblock %}
