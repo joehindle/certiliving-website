@@ -510,6 +510,8 @@ main { flex: 1; }
   box-shadow: var(--shadow-soft);
   appearance: none;
   -webkit-appearance: none;
+  text-decoration: none;
+  line-height: 1;
 }
 
 .detail-carousel-nav:hover {

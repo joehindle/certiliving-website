@@ -352,6 +352,24 @@ def detail(listing_id):
         abort(404)
 
     listing_images = _listing_image_urls(listing)
+    current_image_raw = request.args.get("image", "0").strip()
+    try:
+        current_image_index = int(current_image_raw)
+    except ValueError:
+        current_image_index = 0
+    if current_image_index < 0:
+        current_image_index = 0
+    if current_image_index >= len(listing_images):
+        current_image_index = 0
+
+    current_image_url = listing_images[current_image_index]
+    prev_image_url = None
+    next_image_url = None
+    if len(listing_images) > 1:
+        prev_index = (current_image_index - 1) % len(listing_images)
+        next_index = (current_image_index + 1) % len(listing_images)
+        prev_image_url = url_for("listings.detail", listing_id=listing_id, image=prev_index)
+        next_image_url = url_for("listings.detail", listing_id=listing_id, image=next_index)
 
     similar_listings = db.execute(
         """
@@ -439,5 +457,9 @@ def detail(listing_id):
         'listings/detail.html',
         listing=listing,
         listing_images=listing_images,
+        current_image_index=current_image_index,
+        current_image_url=current_image_url,
+        prev_image_url=prev_image_url,
+        next_image_url=next_image_url,
         similar_listings=similar_listings,
     )

@@ -9,15 +9,17 @@
   <section class="detail-main">
 
     <div class="detail-hero">
-      <div class="detail-carousel-frame" data-carousel data-carousel-images="{{ listing_images|tojson|e }}">
+      <div class="detail-carousel-frame" data-carousel>
+        <script type="application/json" data-carousel-images>{{ listing_images|tojson }}</script>
         <img class="detail-image detail-carousel-image"
              data-carousel-image
-             src="{{ listing_images[0] }}"
-             alt="{{ listing['title'] }} image 1">
+             data-listing-title="{{ listing['title']|e }}"
+             src="{{ current_image_url }}"
+             alt="{{ listing['title'] }} image {{ current_image_index + 1 }}">
         {% if listing_images|length > 1 %}
         <button class="detail-carousel-nav prev" type="button" data-carousel-prev aria-label="Previous image">&larr;</button>
         <button class="detail-carousel-nav next" type="button" data-carousel-next aria-label="Next image">&rarr;</button>
-        <div class="detail-carousel-counter" data-carousel-counter></div>
+        <div class="detail-carousel-counter" data-carousel-counter>{{ current_image_index + 1 }} / {{ listing_images|length }}</div>
         {% endif %}
       </div>
       <div class="detail-hero-gradient"></div>
@@ -147,40 +149,44 @@
     const prevButton = carousel.querySelector("[data-carousel-prev]");
     const nextButton = carousel.querySelector("[data-carousel-next]");
     const counter = carousel.querySelector("[data-carousel-counter]");
-    const rawImages = carousel.dataset.carouselImages || "[]";
-    let images = [];
-    try {
-      images = JSON.parse(rawImages);
-    } catch (_error) {
-      images = [];
-    }
+    const imagesScript = carousel.querySelector("[data-carousel-images]");
 
-    if (image && images.length > 0) {
-      let currentIndex = 0;
+    if (image && imagesScript) {
+      let images = [];
+      try {
+        images = JSON.parse(imagesScript.textContent || "[]");
+      } catch (_error) {
+        images = [];
+      }
 
-      const updateCarousel = () => {
-        image.src = images[currentIndex];
-        image.alt = `${carousel.closest(".detail-hero")?.querySelector(".detail-title")?.textContent || "Listing"} image ${currentIndex + 1}`;
+      if (images.length > 0) {
+        let currentIndex = {{ current_image_index }};
+        const listingTitle = image.dataset.listingTitle || "Listing";
 
-        if (counter) {
-          counter.textContent = `${currentIndex + 1} / ${images.length}`;
+        const updateCarousel = () => {
+          image.src = images[currentIndex];
+          image.alt = `${listingTitle} image ${currentIndex + 1}`;
+          if (counter) {
+            counter.textContent = `${currentIndex + 1} / ${images.length}`;
+          }
+        };
+
+        if (prevButton) {
+          prevButton.addEventListener("click", () => {
+            currentIndex = (currentIndex - 1 + images.length) % images.length;
+            updateCarousel();
+          });
         }
-      };
 
-      const goToSlide = (nextIndex) => {
-        currentIndex = (nextIndex + images.length) % images.length;
+        if (nextButton) {
+          nextButton.addEventListener("click", () => {
+            currentIndex = (currentIndex + 1) % images.length;
+            updateCarousel();
+          });
+        }
+
         updateCarousel();
-      };
-
-      if (prevButton) {
-        prevButton.addEventListener("click", () => goToSlide(currentIndex - 1));
       }
-
-      if (nextButton) {
-        nextButton.addEventListener("click", () => goToSlide(currentIndex + 1));
-      }
-
-      updateCarousel();
     }
   }
 
