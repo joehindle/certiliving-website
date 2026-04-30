@@ -12,9 +12,12 @@
     if (frame) {
       frame.style.position = "relative";
       frame.style.width = "100%";
-      frame.style.height = "340px";
-      frame.style.minHeight = "340px";
+      frame.style.aspectRatio = "1 / 1";
+      frame.style.maxHeight = "760px";
+      frame.style.height = "auto";
+      frame.style.minHeight = "0";
       frame.style.overflow = "hidden";
+      frame.style.background = "#0f172a";
     }
 
     if (overlay) {
@@ -30,8 +33,9 @@
     if (image) {
       image.style.width = "100%";
       image.style.height = "100%";
-      image.style.objectFit = "cover";
+      image.style.objectFit = "contain";
       image.style.display = "block";
+      image.style.background = "#0f172a";
     }
 
     if (prevButton) {
@@ -95,6 +99,20 @@
       counter.style.boxShadow = "0 8px 16px rgba(15, 23, 42, 0.18)";
       counter.style.backdropFilter = "blur(8px)";
     }
+
+    const syncFrameSizing = () => {
+      if (!frame) return;
+      frame.style.aspectRatio = "1 / 1";
+      frame.style.height = "auto";
+      frame.style.minHeight = "0";
+      frame.style.maxHeight = window.innerWidth <= 900 ? "none" : "760px";
+      if (image) {
+        image.style.objectFit = "contain";
+      }
+    };
+
+    syncFrameSizing();
+    window.addEventListener("resize", syncFrameSizing);
 
     if (image && imagesScript) {
       let images = [];

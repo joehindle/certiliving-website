@@ -478,16 +478,19 @@ main { flex: 1; }
 .detail-carousel-frame {
   position: relative;
   width: 100%;
-  height: 520px;
-  min-height: 520px;
+  aspect-ratio: 1 / 1;
+  max-height: 760px;
+  min-height: 0;
   overflow: hidden;
+  background: #0f172a;
 }
 
 .detail-carousel-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  background: #0f172a;
 }
 
 .detail-carousel-overlay {
@@ -753,10 +756,8 @@ main { flex: 1; }
   }
   .detail-grid { grid-template-columns: 1fr; }
   .detail-aside { position: static; }
-  .detail-carousel-frame { height: 300px; min-height: 300px; }
-  .detail-carousel-image {
-    height: 300px;
-  }
+  .detail-carousel-frame { aspect-ratio: 1 / 1; max-height: none; }
+  .detail-carousel-image { height: 100%; }
   .detail-carousel-nav {
     width: 36px;
     height: 36px;
