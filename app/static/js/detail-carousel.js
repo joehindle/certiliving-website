@@ -50,7 +50,7 @@
 
     if (counter) {
       counter.style.position = "absolute";
-      counter.style.left = "14px";
+      counter.style.right = "14px";
       counter.style.bottom = "14px";
       counter.style.zIndex = "21";
     }
