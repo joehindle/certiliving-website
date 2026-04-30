@@ -40,6 +40,16 @@ def _normalize_supporting_photo_urls(photo_urls):
     return [photo_url for photo_url in photo_urls if photo_url]
 
 
+def _dedupe_photo_urls(photo_urls):
+    deduped = []
+    seen = set()
+    for photo_url in photo_urls or []:
+        if photo_url and photo_url not in seen:
+            deduped.append(photo_url)
+            seen.add(photo_url)
+    return deduped
+
+
 def _listing_preview_from_form(
     form,
     existing_photo_url=None,
@@ -155,6 +165,7 @@ def _process_listing_images(
     supporting_photo_files=None,
     existing_cover_photo_url=None,
     existing_supporting_photo_urls=None,
+    replace_supporting=False,
 ):
     uploaded_urls = []
     cover_photo_url = existing_cover_photo_url
@@ -171,8 +182,11 @@ def _process_listing_images(
 
         new_supporting_photo_urls = _upload_listing_images(supporting_photo_files)
         uploaded_urls.extend(new_supporting_photo_urls)
-        supporting_photo_urls.extend(new_supporting_photo_urls)
-        return cover_photo_url, supporting_photo_urls
+        if replace_supporting and new_supporting_photo_urls:
+            supporting_photo_urls = new_supporting_photo_urls
+        else:
+            supporting_photo_urls.extend(new_supporting_photo_urls)
+        return cover_photo_url, _dedupe_photo_urls(supporting_photo_urls)
     except Exception:
         _delete_r2_images(uploaded_urls)
         raise
@@ -229,6 +243,7 @@ def listings_new():
             photo_url, supporting_photo_urls = _process_listing_images(
                 cover_photo_file=cover_photo_file,
                 supporting_photo_files=supporting_photo_files,
+                replace_supporting=False,
             )
         except Exception as exc:
             flash(f"Image upload failed: {exc}", "error")
@@ -273,6 +288,9 @@ def listings_edit(listing_id):
         )
         cover_photo_file = request.files.get("cover_photo_file")
         supporting_photo_files = request.files.getlist("supporting_photo_files")
+        replace_supporting = any(
+            photo_file and photo_file.filename for photo_file in supporting_photo_files
+        )
 
         try:
             new_photo_url, new_supporting_photo_urls = _process_listing_images(
@@ -280,6 +298,7 @@ def listings_edit(listing_id):
                 supporting_photo_files=supporting_photo_files,
                 existing_cover_photo_url=photo_url,
                 existing_supporting_photo_urls=supporting_photo_urls,
+                replace_supporting=replace_supporting,
             )
         except Exception as exc:
             flash(f"Image upload failed: {exc}", "error")
@@ -290,6 +309,8 @@ def listings_edit(listing_id):
             )
             return render_template("admin/listings_form.html", listing=listing_preview)
         photo_url = new_photo_url
+        if replace_supporting:
+            _delete_r2_images(supporting_photo_urls)
         supporting_photo_urls = new_supporting_photo_urls
 
         db.execute(
