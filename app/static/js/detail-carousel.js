@@ -39,6 +39,22 @@
       prevButton.style.marginLeft = "16px";
       prevButton.style.position = "relative";
       prevButton.style.zIndex = "21";
+      prevButton.style.width = "40px";
+      prevButton.style.height = "40px";
+      prevButton.style.borderRadius = "999px";
+      prevButton.style.background = "rgba(255, 255, 255, 0.72)";
+      prevButton.style.color = "#111827";
+      prevButton.style.border = "1px solid rgba(17, 24, 39, 0.08)";
+      prevButton.style.boxShadow = "0 8px 16px rgba(15, 23, 42, 0.14)";
+      prevButton.style.display = "inline-flex";
+      prevButton.style.alignItems = "center";
+      prevButton.style.justifyContent = "center";
+      prevButton.style.fontSize = "16px";
+      prevButton.style.fontWeight = "900";
+      prevButton.style.lineHeight = "1";
+      prevButton.style.textDecoration = "none";
+      prevButton.style.cursor = "pointer";
+      prevButton.style.transition = "background 0.15s ease, box-shadow 0.15s ease";
     }
 
     if (nextButton) {
@@ -46,13 +62,38 @@
       nextButton.style.marginRight = "16px";
       nextButton.style.position = "relative";
       nextButton.style.zIndex = "21";
+      nextButton.style.width = "40px";
+      nextButton.style.height = "40px";
+      nextButton.style.borderRadius = "999px";
+      nextButton.style.background = "rgba(255, 255, 255, 0.72)";
+      nextButton.style.color = "#111827";
+      nextButton.style.border = "1px solid rgba(17, 24, 39, 0.08)";
+      nextButton.style.boxShadow = "0 8px 16px rgba(15, 23, 42, 0.14)";
+      nextButton.style.display = "inline-flex";
+      nextButton.style.alignItems = "center";
+      nextButton.style.justifyContent = "center";
+      nextButton.style.fontSize = "16px";
+      nextButton.style.fontWeight = "900";
+      nextButton.style.lineHeight = "1";
+      nextButton.style.textDecoration = "none";
+      nextButton.style.cursor = "pointer";
+      nextButton.style.transition = "background 0.15s ease, box-shadow 0.15s ease";
     }
 
     if (counter) {
       counter.style.position = "absolute";
-      counter.style.right = "14px";
-      counter.style.bottom = "14px";
+      counter.style.right = "16px";
+      counter.style.bottom = "16px";
       counter.style.zIndex = "21";
+      counter.style.background = "rgba(17, 24, 39, 0.72)";
+      counter.style.color = "#fff";
+      counter.style.padding = "5px 10px";
+      counter.style.borderRadius = "999px";
+      counter.style.fontSize = "11px";
+      counter.style.fontWeight = "700";
+      counter.style.letterSpacing = "0.02em";
+      counter.style.boxShadow = "0 8px 16px rgba(15, 23, 42, 0.18)";
+      counter.style.backdropFilter = "blur(8px)";
     }
 
     if (image && imagesScript) {
