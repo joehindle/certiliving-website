@@ -7,6 +7,13 @@ from dotenv import load_dotenv
 from .extensions import limiter
 
 
+def _supabase_auth_config_present(config):
+    return bool(
+        (config.get("SUPABASE_URL") or "").strip()
+        and (config.get("SUPABASE_PUBLISHABLE_KEY") or "").strip()
+    )
+
+
 
 def create_app(test_config=None):
     load_dotenv()
@@ -16,7 +23,9 @@ def create_app(test_config=None):
     app.config.from_mapping(
         DATABASE_URL=os.environ.get("DATABASE_URL"),
         SECRET_KEY=os.environ.get("SECRET_KEY"),
-        ADMIN_PASSWORD=os.environ.get("ADMIN_PASSWORD"),
+        SUPABASE_URL=os.environ.get("SUPABASE_URL"),
+        SUPABASE_PUBLISHABLE_KEY=os.environ.get("SUPABASE_PUBLISHABLE_KEY"),
+        SUPABASE_ADMIN_EMAILS=os.environ.get("SUPABASE_ADMIN_EMAILS", ""),
         RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
         RESEND_FROM_EMAIL=os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev"),
         ENQUIRY_TO_EMAIL=os.environ.get("ENQUIRY_TO_EMAIL", "team@certiliving.co.uk"),
@@ -44,8 +53,11 @@ def create_app(test_config=None):
 
     if not app.config.get("SECRET_KEY"):
         raise RuntimeError("SECRET_KEY is required. Set it via env or instance/config.py.")
-    if not app.config.get("ADMIN_PASSWORD"):
-        raise RuntimeError("ADMIN_PASSWORD is required. Set it via env or instance/config.py.")
+    if not _supabase_auth_config_present(app.config):
+        raise RuntimeError(
+            "SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are required. "
+            "Set them via env or instance/config.py."
+        )
     if not app.config.get("DATABASE_URL"):
         raise RuntimeError("DATABASE_URL is required. Set it via env or instance/config.py.")
 
@@ -57,10 +69,23 @@ def create_app(test_config=None):
             session["_csrf_token"] = token
         turnstile_site_key = app.config.get("TURNSTILE_SITE_KEY")
         turnstile_secret_key = app.config.get("TURNSTILE_SECRET_KEY")
+        current_user_email = session.get("auth_email")
+        current_user_roles = session.get("auth_roles") or []
+        admin_emails = {
+            email.strip().lower()
+            for email in (app.config.get("SUPABASE_ADMIN_EMAILS") or "").split(",")
+            if email.strip()
+        }
         return {
             "csrf_token": token,
             "turnstile_site_key": turnstile_site_key,
             "turnstile_enabled": bool(turnstile_site_key and turnstile_secret_key),
+            "current_user_email": current_user_email,
+            "current_user_roles": current_user_roles,
+            "current_user_is_admin": (
+                "admin" in current_user_roles
+                or (current_user_email or "").strip().lower() in admin_emails
+            ),
         }
 
     @app.before_request
@@ -80,6 +105,9 @@ def create_app(test_config=None):
 
     from . import listings
     app.register_blueprint(listings.bp)
+
+    from . import auth
+    app.register_blueprint(auth.bp)
 
     from . import admin
     app.register_blueprint(admin.bp)

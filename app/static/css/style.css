@@ -104,6 +104,32 @@ main { flex: 1; }
   opacity: 1;
 }
 
+.nav-auth-form {
+  margin: 0;
+}
+
+.nav-auth-form button,
+.nav-login-link {
+  appearance: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+  padding: 9px 13px;
+  text-decoration: none;
+}
+
+.nav-auth-form button:hover,
+.nav-login-link:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
 @media (max-width: 650px) {
   .nav-links { gap: 14px; }
   .nav-links a { font-size: 13px; }
@@ -968,6 +994,85 @@ main { flex: 1; }
   color: #374151;
   margin-bottom: 20px;
   line-height: 1.6;
+}
+
+.auth-page {
+  display: grid;
+  min-height: 68vh;
+  place-items: center;
+}
+
+.auth-card {
+  width: min(100%, 440px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 15px;
+  padding: 28px;
+}
+
+.auth-card h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.auth-kicker {
+  margin: 0;
+  color: var(--accent-dark);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.auth-subtitle {
+  margin: -4px 0 4px;
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.auth-messages {
+  display: grid;
+  gap: 8px;
+}
+
+.auth-field span {
+  display: block;
+  margin-bottom: 7px;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.auth-field input {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font: inherit;
+  outline: none;
+}
+
+.auth-field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(49, 207, 120, 0.14);
+}
+
+.auth-notice {
+  padding: 12px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .flash-container {

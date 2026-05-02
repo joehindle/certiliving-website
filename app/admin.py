@@ -1,4 +1,3 @@
-from functools import wraps
 from pathlib import Path
 import mimetypes
 import uuid
@@ -7,9 +6,8 @@ import boto3
 from botocore.client import Config
 from flask import Blueprint, current_app, request, session, redirect, url_for, render_template, flash
 from werkzeug.utils import secure_filename
+from .auth import role_required
 from .db import get_db
-from .extensions import limiter
-import time
 
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -192,32 +190,18 @@ def _process_listing_images(
         raise
 
 
-def admin_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if not session.get("is_admin"):
-            return redirect(url_for("admin.login"))
-        return view(*args, **kwargs)
-    return wrapped
+admin_required = role_required("admin")
+
 
 @bp.route("/login", methods=("GET", "POST"))
-@limiter.limit("5 per minute")
-@limiter.limit("30 per hour")
 def login():
-    if request.method == "POST":
-        password = request.form.get("password", "")
-        if password == current_app.config["ADMIN_PASSWORD"]:
-            session["is_admin"] = True
-            return redirect(url_for("admin.listings_index"))
-        time.sleep(0.8)
-        flash("Wrong password.")       
-    return render_template("admin/login.html")
+    return redirect(url_for("auth.login", next=url_for("admin.listings_index")))
+
 
 @bp.route("/logout", methods=("POST",))
-@admin_required
 def logout():
     session.clear()
-    return redirect(url_for("admin.login"))
+    return redirect(url_for("listings.index"))
 
 @bp.route("/")
 @admin_required
