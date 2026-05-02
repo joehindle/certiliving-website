@@ -101,8 +101,11 @@ def app():
         {
             "TESTING": True,
             "SECRET_KEY": "test-secret-key",
-            "ADMIN_PASSWORD": "test-admin-password",
+            "SUPABASE_URL": "https://example.supabase.co",
+            "SUPABASE_PUBLISHABLE_KEY": "test-publishable-key",
             "DATABASE_URL": "postgresql://postgres:postgres@localhost:5432/postgres",
+            "TURNSTILE_SITE_KEY": "",
+            "TURNSTILE_SECRET_KEY": "",
         }
     )
     return app

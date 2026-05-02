@@ -25,10 +25,19 @@ def test_listings_page_renders_filters_and_results(client, monkeypatch, fake_db)
     assert any("ORDER BY rent_pcm ASC, created DESC" in query for query, _ in fake_db.calls)
 
 
-def test_admin_login_success_redirects_to_dashboard(client):
+def test_admin_login_success_redirects_to_dashboard(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.auth._sign_in_with_supabase",
+        lambda email, password: {
+            "id": "user-123",
+            "email": email,
+            "app_metadata": {"role": "admin"},
+        },
+    )
+
     response = client.post(
-        "/admin/login",
-        data={"password": "test-admin-password"},
+        "/login",
+        data={"email": "admin@example.com", "password": "test-password"},
         follow_redirects=False,
     )
 
@@ -40,4 +49,4 @@ def test_admin_area_requires_login(client):
     response = client.get("/admin/", follow_redirects=False)
 
     assert response.status_code == 302
-    assert "/admin/login" in response.headers["Location"]
+    assert "/login" in response.headers["Location"]
