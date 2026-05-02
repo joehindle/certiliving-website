@@ -625,13 +625,12 @@ main { flex: 1; }
 
 .detail-card .detail-desc {
   color: var(--text);
-  line-height: 1.55;
-  display: block;
+  line-height: 1.6;
   margin: 0;
 }
 
 .detail-card .detail-desc:not(:last-child) {
-  margin-bottom: 56px;
+  margin-bottom: 1em;
 }
 
 .similar-listings {
