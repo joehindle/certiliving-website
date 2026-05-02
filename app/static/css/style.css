@@ -627,7 +627,10 @@ main { flex: 1; }
   color: var(--text);
   line-height: 1.6;
   margin: 0;
-  white-space: pre-line;
+}
+
+.detail-desc + .detail-desc {
+  margin-top: 12px;
 }
 
 .similar-listings {

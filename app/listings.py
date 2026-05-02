@@ -44,6 +44,18 @@ def _listing_image_urls(listing):
     return image_urls or [PLACEHOLDER_DETAIL_IMAGE]
 
 
+def _listing_description_paragraphs(description):
+    text = (description or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not text:
+        return []
+
+    return [
+        paragraph.strip()
+        for paragraph in re.split(r"\n\s*\n+", text)
+        if paragraph.strip()
+    ]
+
+
 def _validate_enquiry_form(name, email, message):
     if not name:
         return "Name is required."
@@ -456,6 +468,9 @@ def detail(listing_id):
     return render_template(
         'listings/detail.html',
         listing=listing,
+        description_paragraphs=_listing_description_paragraphs(
+            listing.get("description")
+        ),
         listing_images=listing_images,
         current_image_index=current_image_index,
         current_image_url=current_image_url,

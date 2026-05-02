@@ -56,6 +56,18 @@ def test_validate_enquiry_form_accepts_valid_input():
     assert listings._validate_enquiry_form("Name", "test@example.com", "Hello") is None
 
 
+def test_listing_description_paragraphs_splits_blank_lines():
+    paragraphs = listings._listing_description_paragraphs(
+        "First paragraph.\n\nSecond paragraph.\r\n\r\nThird paragraph."
+    )
+
+    assert paragraphs == [
+        "First paragraph.",
+        "Second paragraph.",
+        "Third paragraph.",
+    ]
+
+
 def test_listing_image_urls_prefers_cover_then_supporting_photos():
     listing = {
         "photo_url": "https://cdn.example.com/listings/cover.webp",
@@ -142,6 +154,26 @@ def test_detail_route_saves_enquiry_and_redirects(client, monkeypatch):
 
     assert response.status_code == 302
     assert fake_db.enquiries
+
+
+def test_detail_route_renders_description_as_paragraphs(client, monkeypatch):
+    listing = {
+        "id": 1,
+        "title": "Central Studios",
+        "city": "Leeds",
+        "rent_pcm": 650,
+        "description": "First paragraph.\n\nSecond paragraph.",
+        "photo_url": "https://cdn.example.com/listings/cover.webp",
+        "supporting_photo_urls": [],
+    }
+    fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
+    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+
+    response = client.get("/listings/1")
+
+    assert response.status_code == 200
+    assert b"<p class=\"detail-desc\">First paragraph.</p>" in response.data
+    assert b"<p class=\"detail-desc\">Second paragraph.</p>" in response.data
 
 
 def test_detail_route_blocks_honeypot_submission(client, monkeypatch):
