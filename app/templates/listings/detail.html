@@ -24,12 +24,13 @@
         </div>
         {% endif %}
       </div>
-      <div class="detail-hero-gradient"></div>
-      <div class="detail-price-badge">&pound;{{ listing['rent_pcm'] }} PCM</div>
     </div>
 
     <div class="detail-card">
-      <h1 class="detail-title">{{ listing['title'] }}</h1>
+      <div class="detail-heading-row">
+        <h1 class="detail-title">{{ listing['title'] }}</h1>
+        <div class="detail-price-pill">&pound;{{ listing['rent_pcm'] }} PCM</div>
+      </div>
       <p class="detail-subtitle">{{ listing['city'] }}</p>
 
       <div class="detail-meta">
