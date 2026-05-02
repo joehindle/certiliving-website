@@ -625,8 +625,8 @@ main { flex: 1; }
 
 .detail-desc {
   color: var(--text);
-  line-height: 1.6;
-  margin: 0 0 16px;
+  line-height: 1.65;
+  margin: 0 0 1.25em;
 }
 
 .detail-desc + .detail-desc {
