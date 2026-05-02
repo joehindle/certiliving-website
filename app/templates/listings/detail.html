@@ -43,7 +43,8 @@
       </div>
 
       <h2 class="section-title">Description</h2>
-      <p class="detail-desc">{{ listing['description'] }}</p>
+      {# Preserve admin-entered paragraph breaks in the public listing view. #}
+      <p class="detail-desc">{{ (listing['description'] or '') | replace('\r\n', '\n') | replace('\r', '\n') | e | replace('\n', '<br>') | safe }}</p>
     </div>
 
   </section>
