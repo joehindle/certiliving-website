@@ -2,36 +2,73 @@
 {% block content %}
 
 <div class="container admin-page">
-  <div class="admin-toolbar">
-    <h1>Admin: Listings</h1>
+  <div class="admin-hero">
+    <div>
+      <p class="admin-kicker">CertiLiving Admin</p>
+      <h1>Listings</h1>
+      <p class="admin-subtitle">Manage the homes shown on the public site.</p>
+    </div>
     <div class="admin-actions">
-      <a href="{{ url_for('admin.listings_new') }}">+ New listing</a>
+      <a class="admin-button admin-button-primary" href="{{ url_for('admin.listings_new') }}">New listing</a>
       <form method="post" action="{{ url_for('admin.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit">Logout</button>
+        <button class="admin-button admin-button-secondary" type="submit">Logout</button>
       </form>
     </div>
   </div>
 
-  <table class="admin-table">
-    <tr>
-      <th>Title</th><th>City</th><th>Rent</th><th>Actions</th>
-    </tr>
-    {% for l in listings %}
-    <tr>
-      <td>{{ l['title'] }}</td>
-      <td>{{ l['city'] }}</td>
-      <td>&pound;{{ l['rent_pcm'] }}</td>
-      <td class="admin-row-actions">
-        <a href="{{ url_for('admin.listings_edit', listing_id=l['id']) }}">Edit</a>
-        <form method="post" action="{{ url_for('admin.listings_delete', listing_id=l['id']) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-          <button type="submit" onclick="return confirm('Delete this listing?')">Delete</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Published listings</h2>
+        <p>{{ listings|length }} listing{{ '' if listings|length == 1 else 's' }} in the dashboard</p>
+      </div>
+    </div>
+
+    {% if listings %}
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>City</th>
+            <th>Rent</th>
+            <th>Room</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in listings %}
+          <tr>
+            <td>
+              <strong>{{ l['title'] }}</strong>
+              {% if l['available_from'] %}
+              <span>Available {{ l['available_from'] }}</span>
+              {% endif %}
+            </td>
+            <td>{{ l['city'] }}</td>
+            <td>&pound;{{ l['rent_pcm'] }} PCM</td>
+            <td>{{ l['room_type'] if l['room_type'] else 'N/A' }}</td>
+            <td class="admin-row-actions">
+              <a class="admin-link-button" href="{{ url_for('admin.listings_edit', listing_id=l['id']) }}">Edit</a>
+              <form method="post" action="{{ url_for('admin.listings_delete', listing_id=l['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="admin-danger-button" type="submit" onclick="return confirm('Delete this listing?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="admin-empty">
+      <h2>No listings yet</h2>
+      <p>Create your first listing to start showing accommodation on the public site.</p>
+      <a class="admin-button admin-button-primary" href="{{ url_for('admin.listings_new') }}">Create listing</a>
+    </div>
+    {% endif %}
+  </div>
 </div>
 
 {% endblock %}

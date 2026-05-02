@@ -1,11 +1,16 @@
 {% extends "admin/base.html" %}
 {% block content %}
-<div class="container admin-page">
-  <h1>Staff Login</h1>
-  <form method="post" class="admin-form">
+<div class="container admin-page admin-login-page">
+  <form method="post" class="admin-form admin-login-card">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <input type="password" name="password" placeholder="Admin password" required>
-    <button type="submit">Login</button>
+    <p class="admin-kicker">CertiLiving Admin</p>
+    <h1>Staff login</h1>
+    <p class="admin-subtitle">Sign in to manage listings and enquiries.</p>
+    <label class="admin-field">
+      <span>Password</span>
+      <input type="password" name="password" placeholder="Admin password" required>
+    </label>
+    <button class="admin-button admin-button-primary" type="submit">Login</button>
   </form>
 </div>
 {% endblock %}
