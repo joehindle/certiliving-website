@@ -38,7 +38,9 @@ class AdminFakeDB:
 
 def _login_as_admin(client):
     with client.session_transaction() as session:
-        session["is_admin"] = True
+        session["auth_user_id"] = "user-123"
+        session["auth_email"] = "admin@example.com"
+        session["auth_roles"] = ["admin"]
 
 
 def test_clean_optional_and_listing_parsers():
@@ -93,15 +95,19 @@ def test_admin_listings_index_renders_listings(client, monkeypatch, sample_listi
 
 
 def test_admin_login_failure_shows_message(client, monkeypatch):
-    monkeypatch.setattr("app.admin.time.sleep", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr("app.auth.time.sleep", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        "app.auth._sign_in_with_supabase",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(ValueError("Invalid email or password.")),
+    )
 
     response = client.post(
-        "/admin/login",
-        data={"password": "wrong-password"},
+        "/login",
+        data={"email": "admin@example.com", "password": "wrong-password"},
     )
 
     assert response.status_code == 200
-    assert b"Wrong password." in response.data
+    assert b"Invalid email or password." in response.data
 
 
 def test_admin_listings_new_posts_listing(client, monkeypatch):
