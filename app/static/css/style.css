@@ -623,7 +623,12 @@ main { flex: 1; }
   color: var(--text);
 }
 
-.detail-desc { color: var(--text); line-height: 1.6; margin: 0; }
+.detail-desc {
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-line;
+}
 
 .similar-listings {
   margin-top: 28px;
