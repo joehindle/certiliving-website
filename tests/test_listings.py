@@ -56,9 +56,9 @@ def test_validate_enquiry_form_accepts_valid_input():
     assert listings._validate_enquiry_form("Name", "test@example.com", "Hello") is None
 
 
-def test_listing_description_paragraphs_splits_blank_lines():
+def test_listing_description_paragraphs_splits_admin_line_breaks():
     paragraphs = listings._listing_description_paragraphs(
-        "First paragraph.\n\nSecond paragraph.\r\n\r\nThird paragraph."
+        "First paragraph.\nSecond paragraph.\r\n\r\nThird paragraph."
     )
 
     assert paragraphs == [

@@ -51,7 +51,7 @@ def _listing_description_paragraphs(description):
 
     return [
         paragraph.strip()
-        for paragraph in re.split(r"\n\s*\n+", text)
+        for paragraph in re.split(r"\n+", text)
         if paragraph.strip()
     ]
 

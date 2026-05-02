@@ -623,18 +623,15 @@ main { flex: 1; }
   color: var(--text);
 }
 
-.detail-desc {
+.detail-card .detail-desc {
   color: var(--text);
   line-height: 1.55;
-  margin: 0 0 3.5em;
+  display: block;
+  margin: 0;
 }
 
-.detail-desc + .detail-desc {
-  margin-top: 0;
-}
-
-.detail-desc:last-of-type {
-  margin-bottom: 0;
+.detail-card .detail-desc:not(:last-child) {
+  margin-bottom: 56px;
 }
 
 .similar-listings {
