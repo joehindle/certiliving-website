@@ -25,8 +25,11 @@ class AdminFakeDB:
     def execute(self, query, params=()):
         self.calls.append((query, params))
 
-        if query.startswith("SELECT * FROM listings ORDER BY created DESC"):
+        if query.startswith("SELECT * FROM listings ORDER BY created DESC") or query.startswith("SELECT l.*, p.display_name"):
             return SimpleNamespace(fetchall=lambda: self.listings)
+
+        if query.startswith("SELECT DISTINCT p.id, p.display_name"):
+            return SimpleNamespace(fetchall=lambda: [])
 
         if query.startswith("SELECT * FROM listings WHERE id = %s"):
             return SimpleNamespace(fetchone=lambda: self.listing)

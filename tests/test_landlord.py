@@ -88,7 +88,7 @@ def test_pending_landlord_sees_review_limits(client, monkeypatch):
     assert response.status_code == 200
     assert b"Account pending review" in response.data
     assert b"submit 1 listing" in response.data
-    assert b"New listing" in response.data
+    assert b"Create listing" in response.data
 
 
 def test_pending_landlord_can_open_single_listing_form(client, monkeypatch):
