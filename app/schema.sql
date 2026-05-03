@@ -1,6 +1,7 @@
 -- LISTINGS (Properties / Rooms)
 CREATE TABLE IF NOT EXISTS listings (
     id BIGSERIAL PRIMARY KEY,
+    owner_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
 
     title TEXT NOT NULL,
     description TEXT NOT NULL,

@@ -29,14 +29,24 @@ def test_admin_login_success_redirects_to_dashboard(client, monkeypatch):
     monkeypatch.setattr(
         "app.auth._sign_in_with_supabase",
         lambda email, password: {
-            "id": "user-123",
-            "email": email,
-            "app_metadata": {"role": "admin"},
+            "access_token": "token-123",
+            "user": {
+                "id": "user-123",
+                "email": email,
+            },
+        },
+    )
+    monkeypatch.setattr(
+        "app.auth._load_profile",
+        lambda access_token, user_id: {
+            "id": user_id,
+            "email": "admin@example.com",
+            "role": "admin",
         },
     )
 
     response = client.post(
-        "/login",
+        "/account",
         data={"email": "admin@example.com", "password": "test-password"},
         follow_redirects=False,
     )
@@ -49,4 +59,4 @@ def test_admin_area_requires_login(client):
     response = client.get("/admin/", follow_redirects=False)
 
     assert response.status_code == 302
-    assert "/login" in response.headers["Location"]
+    assert "/account" in response.headers["Location"]

@@ -25,7 +25,6 @@ def create_app(test_config=None):
         SECRET_KEY=os.environ.get("SECRET_KEY"),
         SUPABASE_URL=os.environ.get("SUPABASE_URL"),
         SUPABASE_PUBLISHABLE_KEY=os.environ.get("SUPABASE_PUBLISHABLE_KEY"),
-        SUPABASE_ADMIN_EMAILS=os.environ.get("SUPABASE_ADMIN_EMAILS", ""),
         RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
         RESEND_FROM_EMAIL=os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev"),
         ENQUIRY_TO_EMAIL=os.environ.get("ENQUIRY_TO_EMAIL", "team@certiliving.co.uk"),
@@ -71,21 +70,13 @@ def create_app(test_config=None):
         turnstile_secret_key = app.config.get("TURNSTILE_SECRET_KEY")
         current_user_email = session.get("auth_email")
         current_user_roles = session.get("auth_roles") or []
-        admin_emails = {
-            email.strip().lower()
-            for email in (app.config.get("SUPABASE_ADMIN_EMAILS") or "").split(",")
-            if email.strip()
-        }
         return {
             "csrf_token": token,
             "turnstile_site_key": turnstile_site_key,
             "turnstile_enabled": bool(turnstile_site_key and turnstile_secret_key),
             "current_user_email": current_user_email,
             "current_user_roles": current_user_roles,
-            "current_user_is_admin": (
-                "admin" in current_user_roles
-                or (current_user_email or "").strip().lower() in admin_emails
-            ),
+            "current_user_is_admin": "admin" in current_user_roles,
         }
 
     @app.before_request
@@ -111,5 +102,8 @@ def create_app(test_config=None):
 
     from . import admin
     app.register_blueprint(admin.bp)
+
+    from . import landlord
+    app.register_blueprint(landlord.bp)
 
     return app

@@ -195,7 +195,7 @@ admin_required = role_required("admin")
 
 @bp.route("/login", methods=("GET", "POST"))
 def login():
-    return redirect(url_for("auth.login", next=url_for("admin.listings_index")))
+    return redirect(url_for("auth.account", next=url_for("admin.listings_index")))
 
 
 @bp.route("/logout", methods=("POST",))

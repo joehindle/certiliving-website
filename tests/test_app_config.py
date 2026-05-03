@@ -73,6 +73,6 @@ def test_csrf_protection_blocks_post_without_token(monkeypatch):
     app = create_app()
     client = app.test_client()
 
-    response = client.post("/login", data={"email": "admin@example.com", "password": "secret"})
+    response = client.post("/account", data={"email": "admin@example.com", "password": "secret"})
 
     assert response.status_code == 400

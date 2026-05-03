@@ -102,12 +102,37 @@ def test_admin_login_failure_shows_message(client, monkeypatch):
     )
 
     response = client.post(
-        "/login",
+        "/account",
         data={"email": "admin@example.com", "password": "wrong-password"},
     )
 
     assert response.status_code == 200
     assert b"Invalid email or password." in response.data
+
+
+def test_admin_login_missing_profile_shows_message(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.auth._sign_in_with_supabase",
+        lambda email, password: {
+            "access_token": "token-123",
+            "user": {
+                "id": "user-123",
+                "email": email,
+            },
+        },
+    )
+    monkeypatch.setattr(
+        "app.auth._load_profile",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(RuntimeError("Account profile was not found.")),
+    )
+
+    response = client.post(
+        "/account",
+        data={"email": "admin@example.com", "password": "test-password"},
+    )
+
+    assert response.status_code == 200
+    assert b"Account profile was not found." in response.data
 
 
 def test_admin_listings_new_posts_listing(client, monkeypatch):

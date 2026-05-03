@@ -4,11 +4,11 @@
 <div class="container admin-page">
   <div class="admin-hero">
     <div>
-      <p class="admin-kicker">Listing editor</p>
+      <p class="admin-kicker">{{ dashboard_kicker if dashboard_kicker is defined else 'Listing editor' }}</p>
       <h1>{{ 'Edit' if listing else 'New' }} Listing</h1>
-      <p class="admin-subtitle">Keep details clear, accurate, and ready for students to scan.</p>
+      <p class="admin-subtitle">{{ dashboard_subtitle if dashboard_subtitle is defined else 'Keep details clear, accurate, and ready for students to scan.' }}</p>
     </div>
-    <a class="admin-button admin-button-secondary" href="{{ url_for('admin.listings_index') }}">Back to listings</a>
+    <a class="admin-button admin-button-secondary" href="{{ index_url if index_url is defined else url_for('admin.listings_index') }}">Back to listings</a>
   </div>
 
   <form method="post" enctype="multipart/form-data" class="admin-form admin-form-wide admin-panel">
@@ -96,7 +96,7 @@
 
     <div class="admin-form-footer">
       <button class="admin-button admin-button-primary" type="submit">Save listing</button>
-      <a class="admin-button admin-button-secondary" href="{{ url_for('admin.listings_index') }}">Cancel</a>
+      <a class="admin-button admin-button-secondary" href="{{ index_url if index_url is defined else url_for('admin.listings_index') }}">Cancel</a>
     </div>
 
   </form>

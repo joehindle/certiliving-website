@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container auth-page">
+  <form method="post" class="auth-card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="mode" value="{{ auth_mode }}">
+    {% if next_url %}
+      <input type="hidden" name="next" value="{{ next_url }}">
+    {% endif %}
+
+    <div class="auth-switch" role="tablist" aria-label="Account actions">
+      <a
+        class="auth-switch-link{% if auth_mode == 'login' %} active{% endif %}"
+        href="{{ url_for('auth.account', mode='login', next=next_url) }}"
+      >Log in</a>
+      <a
+        class="auth-switch-link{% if auth_mode == 'register' %} active{% endif %}"
+        href="{{ url_for('auth.account', mode='register', next=next_url) }}"
+      >Register</a>
+    </div>
+
+    <p class="auth-kicker">CertiLiving account</p>
+    <h1>{{ 'Create account' if auth_mode == 'register' else 'Log in' }}</h1>
+    <p class="auth-subtitle">
+      {% if auth_mode == 'register' %}
+        Create your account to get started. New accounts are created as landlords by default.
+      {% else %}
+        Use your email and password to access your account.
+      {% endif %}
+    </p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="auth-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if not supabase_auth_enabled %}
+      <div class="auth-notice">
+        Authentication is not configured yet. Add your Supabase environment variables to enable account access.
+      </div>
+    {% endif %}
+
+    <div class="honeypot-field" aria-hidden="true" hidden>
+      <label>
+        <span>Website</span>
+        <input name="website" type="text" tabindex="-1" autocomplete="off">
+      </label>
+    </div>
+
+    <label class="auth-field">
+      <span>Email</span>
+      <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+    </label>
+
+    <label class="auth-field">
+      <span>Password</span>
+      <input
+        type="password"
+        name="password"
+        placeholder="{{ 'Create a password' if auth_mode == 'register' else 'Your password' }}"
+        autocomplete="{{ 'new-password' if auth_mode == 'register' else 'current-password' }}"
+        required
+      >
+    </label>
+
+    {% if auth_mode == 'register' %}
+      <label class="auth-field">
+        <span>Confirm password</span>
+        <input
+          type="password"
+          name="confirm_password"
+          placeholder="Repeat your password"
+          autocomplete="new-password"
+          required
+        >
+      </label>
+    {% endif %}
+
+    {% if turnstile_enabled and turnstile_site_key %}
+      <div class="turnstile-widget">
+        <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-size="flexible" data-theme="light"></div>
+      </div>
+    {% endif %}
+
+    <button class="primary-btn" type="submit">
+      {{ 'Create account' if auth_mode == 'register' else 'Log in' }}
+    </button>
+  </form>
+</div>
+
+{% if turnstile_enabled and turnstile_site_key %}
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+{% endif %}
+{% endblock %}
