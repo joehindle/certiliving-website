@@ -60,6 +60,16 @@
       <h2 class="section-title">Send Enquiry</h2>
       <p class="enquiry-hint">We'll forward your message to the accommodation contact.</p>
 
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="auth-messages">
+            {% for category, message in messages %}
+              <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
       <form method="post" class="enquiry-form">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div class="honeypot-field" aria-hidden="true" hidden>
@@ -152,3 +162,5 @@
 <script src="{{ url_for('static', filename='js/detail-carousel.js', v='20260430d') }}" defer></script>
 
 {% endblock %}
+
+{% block global_flashes %}{% endblock %}
