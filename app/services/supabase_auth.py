@@ -60,11 +60,8 @@ def sign_up_with_supabase(email, password, email_redirect_to, display_name=None)
         {
             "email": email,
             "password": password,
-            "options": {
-                "email_redirect_to": email_redirect_to,
-                "data": {
-                    "display_name": display_name,
-                },
+            "data": {
+                "display_name": display_name,
             },
         }
     ).encode("utf-8")
