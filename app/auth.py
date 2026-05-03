@@ -192,9 +192,8 @@ def _sign_up_with_supabase(email, password):
         current_app.logger.exception("Supabase sign-up request failed")
         raise RuntimeError("Registration is unavailable right now.") from exc
 
-    user = response_payload.get("user") or {}
-    if not user or not user.get("id"):
-        raise RuntimeError("Registration did not return a user record.")
+    if not isinstance(response_payload, dict) or not response_payload:
+        raise RuntimeError("Registration did not return a valid response.")
     return response_payload
 
 

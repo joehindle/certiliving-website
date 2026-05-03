@@ -87,3 +87,28 @@ def test_auth_confirm_handles_invalid_token(client, monkeypatch):
 
     assert response.status_code == 302
     assert "/account?mode=login" in response.headers["Location"]
+
+
+def test_register_without_immediate_user_record_redirects_to_login(client, monkeypatch):
+    monkeypatch.setattr("app.auth._verify_auth_turnstile", lambda: (True, []))
+    monkeypatch.setattr(
+        "app.auth._sign_up_with_supabase",
+        lambda email, password: {
+            "access_token": None,
+            "user": None,
+        },
+    )
+
+    response = client.post(
+        "/account",
+        data={
+            "mode": "register",
+            "email": "new@example.com",
+            "password": "password123",
+            "confirm_password": "password123",
+        },
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    assert "/account?mode=login" in response.headers["Location"]
