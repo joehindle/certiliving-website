@@ -107,11 +107,12 @@ def test_register_without_immediate_user_record_redirects_to_login(client, monke
             "password": "password123",
             "confirm_password": "password123",
         },
-        follow_redirects=False,
+        follow_redirects=True,
     )
 
-    assert response.status_code == 302
-    assert "/account?mode=login" in response.headers["Location"]
+    assert response.status_code == 200
+    assert b"If this email is new, check your inbox to confirm it." in response.data
+    assert b"Account created." not in response.data
 
 
 def test_register_existing_account_redirects_to_login_with_info(client, monkeypatch):

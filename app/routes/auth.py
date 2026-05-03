@@ -182,7 +182,11 @@ def account():
                         flash("Account created.", "success")
                         return redirect(_post_login_redirect())
                 else:
-                    flash("Account created. Check your email to confirm your address, then log in.", "success")
+                    flash(
+                        "If this email is new, check your inbox to confirm it. "
+                        "If you already have an account, please log in instead.",
+                        "info",
+                    )
                     return redirect(url_for("auth.account", mode="login"))
         else:
             try:
