@@ -259,6 +259,7 @@ def _start_authenticated_session(user, profile):
 @limiter.limit("30 per hour")
 def account():
     mode = _current_auth_mode()
+    email_verified = request.args.get("verified", "").strip() == "1"
 
     if request.method == "POST":
         email = (request.form.get("email") or "").strip().lower()
@@ -335,6 +336,7 @@ def account():
     return render_template(
         "auth/account.html",
         auth_mode=mode,
+        email_verified=email_verified,
         next_url=request.args.get("next", ""),
         supabase_auth_enabled=_supabase_auth_enabled(),
     )

@@ -29,6 +29,12 @@
       {% endif %}
     </p>
 
+    {% if email_verified %}
+      <div class="flash success">
+        Email confirmed. You can now log in.
+      </div>
+    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div class="auth-messages">
