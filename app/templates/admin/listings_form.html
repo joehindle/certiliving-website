@@ -95,6 +95,7 @@
     </div>
 
     <div class="admin-form-footer">
+      {% include "_form_security.html" %}
       <button class="admin-button admin-button-primary" type="submit">Save listing</button>
       <a class="admin-button admin-button-secondary" href="{{ index_url if index_url is defined else url_for('admin.listings_index') }}">Cancel</a>
     </div>
@@ -102,4 +103,5 @@
   </form>
 </div>
 
+{% include "_turnstile_script.html" %}
 {% endblock %}

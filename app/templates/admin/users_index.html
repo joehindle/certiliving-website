@@ -1,0 +1,94 @@
+{% extends "admin/base.html" %}
+{% block content %}
+
+<div class="container admin-page">
+  <div class="admin-hero">
+    <div>
+      <p class="admin-kicker">CertiLiving Admin</p>
+      <h1>User management</h1>
+      <p class="admin-subtitle">Review landlord accounts, approve access, and keep roles tidy.</p>
+    </div>
+    <div class="admin-actions">
+      <form method="post" action="{{ url_for('admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="admin-button admin-button-secondary" type="submit">Logout</button>
+      </form>
+    </div>
+  </div>
+
+  {% include "admin/_tabs.html" %}
+
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Registered accounts</h2>
+        <p>{{ users|length }} user{{ '' if users|length == 1 else 's' }} found</p>
+      </div>
+    </div>
+
+    {% if users %}
+    <div class="admin-table-wrap">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td>
+              <strong>{{ user['email'] }}</strong>
+              {% if user['display_name'] %}
+              <span>{{ user['display_name'] }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <span class="admin-pill">{{ user['role']|capitalize }}</span>
+            </td>
+            <td>
+              <span class="admin-status-pill admin-status-{{ user['account_status']|default('pending') }}">
+                {{ user['account_status']|default('pending')|capitalize }}
+              </span>
+            </td>
+            <td>{{ user['created_at'] if user['created_at'] else 'N/A' }}</td>
+            <td class="admin-row-actions admin-row-actions-wide">
+              <form class="admin-inline-form" method="post" action="{{ url_for('admin.users_update_status', user_id=user['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <select name="account_status" aria-label="Account status">
+                  {% for status in ['pending', 'approved', 'rejected'] %}
+                  <option value="{{ status }}" {% if user['account_status'] == status %}selected{% endif %}>{{ status|capitalize }}</option>
+                  {% endfor %}
+                </select>
+                <button class="admin-link-button" type="submit">Save status</button>
+              </form>
+
+              <form class="admin-inline-form" method="post" action="{{ url_for('admin.users_update_role', user_id=user['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <select name="role" aria-label="User role">
+                  {% for role in ['landlord', 'admin'] %}
+                  <option value="{{ role }}" {% if user['role'] == role %}selected{% endif %}>{{ role|capitalize }}</option>
+                  {% endfor %}
+                </select>
+                <button class="admin-link-button" type="submit">Save role</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="admin-empty">
+      <h2>No users yet</h2>
+      <p>New registrations will appear here after Supabase creates their profile row.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

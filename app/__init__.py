@@ -70,12 +70,14 @@ def create_app(test_config=None):
         turnstile_secret_key = app.config.get("TURNSTILE_SECRET_KEY")
         current_user_email = session.get("auth_email")
         current_user_roles = session.get("auth_roles") or []
+        current_user_account_status = session.get("auth_account_status")
         return {
             "csrf_token": token,
             "turnstile_site_key": turnstile_site_key,
             "turnstile_enabled": bool(turnstile_site_key and turnstile_secret_key),
             "current_user_email": current_user_email,
             "current_user_roles": current_user_roles,
+            "current_user_account_status": current_user_account_status,
             "current_user_is_admin": "admin" in current_user_roles,
         }
 
@@ -94,16 +96,16 @@ def create_app(test_config=None):
     from . import db
     db.init_app(app)
 
-    from . import listings
+    from .routes import listings
     app.register_blueprint(listings.bp)
 
-    from . import auth
+    from .routes import auth
     app.register_blueprint(auth.bp)
 
-    from . import admin
+    from .routes import admin
     app.register_blueprint(admin.bp)
 
-    from . import landlord
+    from .routes import landlord
     app.register_blueprint(landlord.bp)
 
     return app

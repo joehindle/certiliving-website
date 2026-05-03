@@ -1,0 +1,76 @@
+{% extends "admin/base.html" %}
+{% block content %}
+
+<div class="container admin-page">
+  <div class="admin-hero">
+    <div>
+      <p class="admin-kicker">CertiLiving Admin</p>
+      <h1>Enquiries</h1>
+      <p class="admin-subtitle">Review student messages and keep the enquiry inbox manageable.</p>
+    </div>
+    <div class="admin-actions">
+      <form method="post" action="{{ url_for('admin.logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button class="admin-button admin-button-secondary" type="submit">Logout</button>
+      </form>
+    </div>
+  </div>
+
+  {% include "admin/_tabs.html" %}
+
+  <div class="admin-panel">
+    <div class="admin-panel-header">
+      <div>
+        <h2>Latest enquiries</h2>
+        <p>{{ enquiries|length }} enquiry{{ '' if enquiries|length == 1 else 'ies' }} received</p>
+      </div>
+    </div>
+
+    {% if enquiries %}
+    <div class="admin-table-wrap">
+      <table class="admin-table admin-enquiries-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Listing</th>
+            <th>Message</th>
+            <th>Received</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for enquiry in enquiries %}
+          <tr>
+            <td>
+              <strong>{{ enquiry['student_name'] }}</strong>
+              <span><a href="mailto:{{ enquiry['student_email'] }}">{{ enquiry['student_email'] }}</a></span>
+            </td>
+            <td>
+              <strong>{{ enquiry['listing_title'] if enquiry['listing_title'] else 'Deleted listing' }}</strong>
+              {% if enquiry['listing_city'] %}
+              <span>{{ enquiry['listing_city'] }}</span>
+              {% endif %}
+            </td>
+            <td class="admin-message-cell">{{ enquiry['message'] }}</td>
+            <td>{{ enquiry['created'] if enquiry['created'] else 'N/A' }}</td>
+            <td class="admin-row-actions">
+              <form method="post" action="{{ url_for('admin.enquiries_delete', enquiry_id=enquiry['id']) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="admin-danger-button" type="submit" onclick="return confirm('Delete this enquiry?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="admin-empty">
+      <h2>No enquiries yet</h2>
+      <p>Student enquiry form submissions will appear here.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

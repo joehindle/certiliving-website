@@ -1,0 +1,9 @@
+{% if admin_tabs is defined and admin_tabs %}
+<nav class="admin-tabs" aria-label="Admin sections">
+  {% for tab in admin_tabs %}
+  <a class="admin-tab{% if tab.active %} admin-tab-active{% endif %}" href="{{ tab.url }}">
+    {{ tab.label }}
+  </a>
+  {% endfor %}
+</nav>
+{% endif %}

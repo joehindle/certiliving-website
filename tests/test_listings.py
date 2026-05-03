@@ -3,7 +3,8 @@ import json
 
 import pytest
 
-from app import listings
+from app.services import enquiry_services
+from app.routes import listings
 
 
 class DetailFakeDB:
@@ -49,11 +50,11 @@ class DetailFakeDB:
     ],
 )
 def test_validate_enquiry_form_rejects_invalid_inputs(name, email, message, expected):
-    assert listings._validate_enquiry_form(name, email, message) == expected
+    assert enquiry_services.validate_enquiry_form(name, email, message) == expected
 
 
 def test_validate_enquiry_form_accepts_valid_input():
-    assert listings._validate_enquiry_form("Name", "test@example.com", "Hello") is None
+    assert enquiry_services.validate_enquiry_form("Name", "test@example.com", "Hello") is None
 
 
 def test_listing_description_paragraphs_splits_admin_line_breaks():
@@ -95,7 +96,7 @@ def test_verify_turnstile_token_accepts_valid_response(app, monkeypatch):
         def read(self):
             return json.dumps({"success": True}).encode("utf-8")
 
-    monkeypatch.setattr("app.listings.urlopen", lambda *_args, **_kwargs: FakeResponse())
+    monkeypatch.setattr("app.security.urlopen", lambda *_args, **_kwargs: FakeResponse())
 
     with app.test_request_context("/"):
         app.config.update(
@@ -122,7 +123,7 @@ def test_verify_turnstile_token_rejects_missing_token(app):
 
 def test_detail_route_returns_404_when_listing_missing(client, monkeypatch):
     fake_db = DetailFakeDB(None)
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
 
     response = client.get("/listings/999")
 
@@ -139,8 +140,8 @@ def test_detail_route_saves_enquiry_and_redirects(client, monkeypatch):
         "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
-    monkeypatch.setattr("app.listings._send_enquiry_email", lambda *args, **kwargs: None)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.send_enquiry_email", lambda *args, **kwargs: None)
 
     response = client.post(
         "/listings/1",
@@ -167,7 +168,7 @@ def test_detail_route_renders_description_as_paragraphs(client, monkeypatch):
         "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
 
     response = client.get("/listings/1")
 
@@ -186,7 +187,7 @@ def test_detail_route_blocks_honeypot_submission(client, monkeypatch):
         "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
 
     response = client.post(
         "/listings/1",
@@ -213,7 +214,7 @@ def test_detail_route_rejects_invalid_enquiry(client, monkeypatch):
         "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing)
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
 
     response = client.post(
         "/listings/1",
@@ -238,8 +239,8 @@ def test_detail_route_handles_email_failure(client, monkeypatch):
         "supporting_photo_urls": [],
     }
     fake_db = DetailFakeDB(listing, similar_listings=[], fallback_listings=[])
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
-    monkeypatch.setattr("app.listings._send_enquiry_email", lambda *args, **kwargs: (_ for _ in ()).throw(Exception("boom")))
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.send_enquiry_email", lambda *args, **kwargs: (_ for _ in ()).throw(Exception("boom")))
 
     response = client.post(
         "/listings/1",
@@ -256,7 +257,7 @@ def test_detail_route_handles_email_failure(client, monkeypatch):
 
 
 def test_all_listings_handles_invalid_filters_and_pagination(client, monkeypatch, fake_db):
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
 
     response = client.get(
         "/listings?city=Leeds&room_type=Studio&bills_only=1&min_rent=abc&max_rent=xyz&sort=unexpected&page=999&per_page=5"
@@ -276,7 +277,7 @@ def test_send_enquiry_email_builds_payload(app, monkeypatch):
     def fake_send(payload):
         captured["payload"] = payload
 
-    monkeypatch.setattr("app.listings.resend.Emails.send", fake_send)
+    monkeypatch.setattr("app.services.enquiry_services.resend.Emails.send", fake_send)
 
     with app.test_request_context("/"):
         app.config.update(
@@ -284,7 +285,7 @@ def test_send_enquiry_email_builds_payload(app, monkeypatch):
             ENQUIRY_TO_EMAIL="team@example.com",
             RESEND_FROM_EMAIL="onboarding@example.com",
         )
-        listings._send_enquiry_email(listing, "Alice <Admin>", "alice@example.com", "Hello\nWorld")
+        enquiry_services.send_enquiry_email(listing, "Alice <Admin>", "alice@example.com", "Hello\nWorld")
 
     assert captured["payload"]["from"] == "onboarding@example.com"
     assert captured["payload"]["to"] == "team@example.com"
@@ -328,4 +329,4 @@ def test_send_enquiry_email_requires_config(app, config_updates, expected_messag
         app.config.update(config_updates)
 
         with pytest.raises(RuntimeError, match=expected_message):
-            listings._send_enquiry_email(listing, "Alice", "alice@example.com", "Hello")
+            enquiry_services.send_enquiry_email(listing, "Alice", "alice@example.com", "Hello")

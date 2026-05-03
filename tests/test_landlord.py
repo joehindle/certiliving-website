@@ -28,6 +28,9 @@ class LandlordFakeDB:
                 } if self.listing else None
             )
 
+        if query.startswith("SELECT account_status FROM profiles WHERE id = %s"):
+            return SimpleNamespace(fetchone=lambda: None)
+
         return SimpleNamespace(fetchall=lambda: [], fetchone=lambda: self.listing)
 
     def commit(self):
@@ -39,6 +42,15 @@ def _login_as_landlord(client):
         session["auth_user_id"] = "landlord-123"
         session["auth_email"] = "landlord@example.com"
         session["auth_roles"] = ["landlord"]
+        session["auth_account_status"] = "approved"
+
+
+def _login_as_pending_landlord(client):
+    with client.session_transaction() as session:
+        session["auth_user_id"] = "landlord-123"
+        session["auth_email"] = "landlord@example.com"
+        session["auth_roles"] = ["landlord"]
+        session["auth_account_status"] = "pending"
 
 
 def test_landlord_dashboard_requires_login(client):
@@ -51,7 +63,7 @@ def test_landlord_dashboard_requires_login(client):
 def test_landlord_dashboard_renders_owned_listings(client, monkeypatch, sample_listings):
     _login_as_landlord(client)
     fake_db = LandlordFakeDB(listings=sample_listings)
-    monkeypatch.setattr("app.landlord.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
 
     response = client.get("/dashboard/listings")
 
@@ -61,11 +73,36 @@ def test_landlord_dashboard_renders_owned_listings(client, monkeypatch, sample_l
     assert any("WHERE owner_id = %s" in query for query, _ in fake_db.calls)
 
 
+def test_pending_landlord_sees_review_message_not_listings(client, monkeypatch):
+    _login_as_pending_landlord(client)
+    fake_db = LandlordFakeDB()
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
+
+    response = client.get("/dashboard/listings")
+
+    assert response.status_code == 200
+    assert b"Account under review" in response.data
+    assert b"New listing" not in response.data
+    assert not any("FROM listings" in query for query, _ in fake_db.calls)
+
+
+def test_pending_landlord_cannot_create_listing(client, monkeypatch):
+    _login_as_pending_landlord(client)
+    fake_db = LandlordFakeDB()
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
+
+    response = client.get("/dashboard/listings/new", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert "/dashboard/listings" in response.headers["Location"]
+    assert not any("FROM listings" in query for query, _ in fake_db.calls)
+
+
 def test_landlord_create_listing_sets_owner_id(client, monkeypatch):
     _login_as_landlord(client)
     fake_db = LandlordFakeDB()
-    monkeypatch.setattr("app.landlord.get_db", lambda: fake_db)
-    monkeypatch.setattr("app.landlord._process_listing_images", lambda **_kwargs: (
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.landlord.process_listing_images", lambda **_kwargs: (
         "https://cdn.example.com/listings/new.webp",
         ["https://cdn.example.com/listings/support-1.webp"],
     ))
@@ -94,10 +131,33 @@ def test_landlord_create_listing_sets_owner_id(client, monkeypatch):
     assert insert_calls[0][-1] == "landlord-123"
 
 
+def test_landlord_create_listing_blocks_honeypot_submission(client, monkeypatch):
+    _login_as_landlord(client)
+    fake_db = LandlordFakeDB()
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
+
+    response = client.post(
+        "/dashboard/listings/new",
+        data=MultiDict([
+            ("title", "Spam Listing"),
+            ("city", "Leeds"),
+            ("rent_pcm", "725"),
+            ("description", "Fresh listing"),
+            ("website", "spam.example"),
+            ("cover_photo_file", (BytesIO(b"cover"), "cover.webp")),
+        ]),
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 200
+    assert b"Please try again." in response.data
+    assert not any(query.startswith("INSERT INTO listings") for query, _ in fake_db.calls)
+
+
 def test_landlord_cannot_edit_other_users_listing(client, monkeypatch):
     _login_as_landlord(client)
     fake_db = LandlordFakeDB(listing=None)
-    monkeypatch.setattr("app.landlord.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
 
     response = client.get("/dashboard/listings/1/edit")
 
@@ -112,10 +172,10 @@ def test_landlord_delete_only_owned_listing(client, monkeypatch):
             "supporting_photo_urls": ["https://cdn.example.com/listings/support-old.webp"],
         }
     )
-    monkeypatch.setattr("app.landlord.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
     deleted = []
-    monkeypatch.setattr("app.landlord._delete_r2_image", lambda photo_url: deleted.append(photo_url))
-    monkeypatch.setattr("app.landlord._delete_r2_images", lambda photo_urls: deleted.extend(photo_urls))
+    monkeypatch.setattr("app.routes.landlord.delete_r2_image", lambda photo_url: deleted.append(photo_url))
+    monkeypatch.setattr("app.routes.landlord.delete_r2_images", lambda photo_urls: deleted.extend(photo_urls))
 
     response = client.post("/dashboard/listings/1/delete", follow_redirects=False)
 

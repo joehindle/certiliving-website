@@ -9,7 +9,9 @@
       <p class="admin-subtitle">{{ dashboard_subtitle if dashboard_subtitle is defined else 'Manage the homes shown on the public site.' }}</p>
     </div>
     <div class="admin-actions">
+      {% if new_listing_url is not defined or new_listing_url %}
       <a class="admin-button admin-button-primary" href="{{ new_listing_url if new_listing_url is defined else url_for('admin.listings_new') }}">New listing</a>
+      {% endif %}
       <form method="post" action="{{ url_for('admin.logout') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button class="admin-button admin-button-secondary" type="submit">Logout</button>
@@ -17,6 +19,18 @@
     </div>
   </div>
 
+  {% include "admin/_tabs.html" %}
+
+  {% if account_pending is defined and account_pending %}
+  <div class="admin-panel admin-message-panel">
+    <div class="admin-message-icon">Pending</div>
+    <div>
+      <h2>{{ pending_title if pending_title is defined else 'Account under review' }}</h2>
+      <p>{{ pending_copy if pending_copy is defined else 'An admin needs to approve your account before you can manage listings.' }}</p>
+      <p class="admin-hint">Current status: {{ account_status|default('pending')|capitalize }}</p>
+    </div>
+  </div>
+  {% else %}
   <div class="admin-panel">
     <div class="admin-panel-header">
       <div>
@@ -65,10 +79,13 @@
     <div class="admin-empty">
       <h2>{{ dashboard_empty_title if dashboard_empty_title is defined else 'No listings yet' }}</h2>
       <p>{{ dashboard_empty_copy if dashboard_empty_copy is defined else 'Create your first listing to start showing accommodation on the public site.' }}</p>
+      {% if new_listing_url is not defined or new_listing_url %}
       <a class="admin-button admin-button-primary" href="{{ new_listing_url if new_listing_url is defined else url_for('admin.listings_new') }}">Create listing</a>
+      {% endif %}
     </div>
     {% endif %}
   </div>
+  {% endif %}
 </div>
 
 {% endblock %}

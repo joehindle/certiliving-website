@@ -4,7 +4,7 @@ def test_app_factory_creates_app(app):
 
 
 def test_homepage_shows_featured_listing(client, monkeypatch, fake_db):
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
 
     response = client.get("/")
 
@@ -14,7 +14,7 @@ def test_homepage_shows_featured_listing(client, monkeypatch, fake_db):
 
 
 def test_listings_page_renders_filters_and_results(client, monkeypatch, fake_db):
-    monkeypatch.setattr("app.listings.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.listings.get_db", lambda: fake_db)
 
     response = client.get("/listings?city=Leeds&sort=price_asc")
 
@@ -27,7 +27,7 @@ def test_listings_page_renders_filters_and_results(client, monkeypatch, fake_db)
 
 def test_admin_login_success_redirects_to_dashboard(client, monkeypatch):
     monkeypatch.setattr(
-        "app.auth._sign_in_with_supabase",
+        "app.routes.auth.sign_in_with_supabase",
         lambda email, password: {
             "access_token": "token-123",
             "user": {
@@ -37,7 +37,7 @@ def test_admin_login_success_redirects_to_dashboard(client, monkeypatch):
         },
     )
     monkeypatch.setattr(
-        "app.auth._load_profile",
+        "app.routes.auth.load_profile",
         lambda access_token, user_id: {
             "id": user_id,
             "email": "admin@example.com",
@@ -64,7 +64,7 @@ def test_admin_area_requires_login(client):
 
 def test_auth_confirm_redirects_to_verified_login(client, monkeypatch):
     monkeypatch.setattr(
-        "app.auth._verify_confirmation_token",
+        "app.routes.auth.verify_confirmation_token",
         lambda token_hash, otp_type: {
             "user": {"id": "user-123"},
             "session": None,
@@ -79,7 +79,7 @@ def test_auth_confirm_redirects_to_verified_login(client, monkeypatch):
 
 def test_auth_confirm_handles_invalid_token(client, monkeypatch):
     monkeypatch.setattr(
-        "app.auth._verify_confirmation_token",
+        "app.routes.auth.verify_confirmation_token",
         lambda token_hash, otp_type: (_ for _ in ()).throw(RuntimeError("Confirmation link is invalid or expired.")),
     )
 
@@ -90,10 +90,10 @@ def test_auth_confirm_handles_invalid_token(client, monkeypatch):
 
 
 def test_register_without_immediate_user_record_redirects_to_login(client, monkeypatch):
-    monkeypatch.setattr("app.auth._verify_auth_turnstile", lambda: (True, []))
+    monkeypatch.setattr("app.routes.auth.verify_protected_form", lambda *_args, **_kwargs: (True, None))
     monkeypatch.setattr(
-        "app.auth._sign_up_with_supabase",
-        lambda email, password: {
+        "app.routes.auth.sign_up_with_supabase",
+        lambda email, password, email_redirect_to: {
             "access_token": None,
             "user": None,
         },
@@ -112,3 +112,29 @@ def test_register_without_immediate_user_record_redirects_to_login(client, monke
 
     assert response.status_code == 302
     assert "/account?mode=login" in response.headers["Location"]
+
+
+def test_register_existing_account_redirects_to_login_with_info(client, monkeypatch):
+    monkeypatch.setattr("app.routes.auth.verify_protected_form", lambda *_args, **_kwargs: (True, None))
+    monkeypatch.setattr(
+        "app.routes.auth.sign_up_with_supabase",
+        lambda email, password, email_redirect_to: {
+            "existing_account": True,
+            "user": {"id": "existing-user", "identities": []},
+        },
+    )
+
+    response = client.post(
+        "/account",
+        data={
+            "mode": "register",
+            "email": "existing@example.com",
+            "password": "password123",
+            "confirm_password": "password123",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Please log in instead." in response.data
+    assert b"Account created." not in response.data
