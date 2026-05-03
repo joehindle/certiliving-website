@@ -152,7 +152,15 @@ def _sign_in_with_supabase(email, password):
 def _sign_up_with_supabase(email, password):
     supabase_url = (current_app.config.get("SUPABASE_URL") or "").strip().rstrip("/")
     publishable_key = (current_app.config.get("SUPABASE_PUBLISHABLE_KEY") or "").strip()
-    payload = json.dumps({"email": email, "password": password}).encode("utf-8")
+    payload = json.dumps(
+        {
+            "email": email,
+            "password": password,
+            "options": {
+                "email_redirect_to": request.host_url.rstrip("/"),
+            },
+        }
+    ).encode("utf-8")
     request_obj = Request(
         f"{supabase_url}/auth/v1/signup",
         data=payload,
@@ -227,6 +235,43 @@ def _load_profile(access_token, user_id):
     if not isinstance(rows, list) or not rows:
         raise RuntimeError("Account profile was not found.")
     return rows[0]
+
+
+def _verify_confirmation_token(token_hash, otp_type):
+    supabase_url = (current_app.config.get("SUPABASE_URL") or "").strip().rstrip("/")
+    publishable_key = (current_app.config.get("SUPABASE_PUBLISHABLE_KEY") or "").strip()
+    payload = json.dumps(
+        {
+            "token_hash": token_hash,
+            "type": otp_type,
+        }
+    ).encode("utf-8")
+    request_obj = Request(
+        f"{supabase_url}/auth/v1/verify",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "apikey": publishable_key,
+        },
+        method="POST",
+    )
+
+    try:
+        with urlopen(request_obj, timeout=10) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except HTTPError as exc:
+        current_app.logger.exception(
+            "Supabase confirmation verify failed with status=%s type=%s",
+            exc.code,
+            otp_type,
+        )
+        raise RuntimeError("Confirmation link is invalid or expired.") from exc
+    except (URLError, TimeoutError, ValueError, json.JSONDecodeError) as exc:
+        current_app.logger.exception(
+            "Supabase confirmation verify request failed for type=%s",
+            otp_type,
+        )
+        raise RuntimeError("Confirmation could not be completed right now.") from exc
 
 
 def _verify_auth_turnstile():
@@ -345,6 +390,27 @@ def account():
 @bp.route("/register", methods=("GET",))
 def register():
     return redirect(url_for("auth.account", mode="register", next=request.args.get("next", "")))
+
+
+@bp.route("/auth/confirm", methods=("GET",))
+def confirm():
+    token_hash = (request.args.get("token_hash") or "").strip()
+    otp_type = (request.args.get("type") or "email").strip().lower()
+    next_url = (request.args.get("next") or "").strip()
+
+    if not token_hash:
+        flash("Confirmation link is invalid or incomplete.", "error")
+        return redirect(url_for("auth.account", mode="login"))
+
+    try:
+        _verify_confirmation_token(token_hash, otp_type)
+    except RuntimeError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("auth.account", mode="login"))
+
+    if next_url and _is_safe_redirect_target(next_url):
+        return redirect(next_url)
+    return redirect(url_for("auth.account", mode="login", verified=1))
 
 
 @bp.route("/logout", methods=("POST",))

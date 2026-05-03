@@ -60,3 +60,30 @@ def test_admin_area_requires_login(client):
 
     assert response.status_code == 302
     assert "/account" in response.headers["Location"]
+
+
+def test_auth_confirm_redirects_to_verified_login(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.auth._verify_confirmation_token",
+        lambda token_hash, otp_type: {
+            "user": {"id": "user-123"},
+            "session": None,
+        },
+    )
+
+    response = client.get("/auth/confirm?token_hash=test-token&type=email", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert "/account?mode=login&verified=1" in response.headers["Location"]
+
+
+def test_auth_confirm_handles_invalid_token(client, monkeypatch):
+    monkeypatch.setattr(
+        "app.auth._verify_confirmation_token",
+        lambda token_hash, otp_type: (_ for _ in ()).throw(RuntimeError("Confirmation link is invalid or expired.")),
+    )
+
+    response = client.get("/auth/confirm?token_hash=test-token&type=email", follow_redirects=False)
+
+    assert response.status_code == 302
+    assert "/account?mode=login" in response.headers["Location"]
