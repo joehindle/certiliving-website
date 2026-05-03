@@ -11,6 +11,19 @@
     <a class="admin-button admin-button-secondary" href="{{ index_url if index_url is defined else url_for('admin.listings_index') }}">Back to listings</a>
   </div>
 
+  {% if limit_title is defined %}
+  <div class="admin-panel admin-message-panel">
+    <div class="admin-message-icon">{{ account_status|default('active')|capitalize }}</div>
+    <div>
+      <h2>{{ limit_title }}</h2>
+      <p>{{ limit_copy }}</p>
+      {% if pending_review_mode is defined and pending_review_mode %}
+        <p class="admin-hint">This listing will be saved as pending review and hidden from public listing pages until an admin approves it.</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <form method="post" enctype="multipart/form-data" class="admin-form admin-form-wide admin-panel">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 

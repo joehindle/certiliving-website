@@ -54,7 +54,7 @@ def sign_in_with_supabase(email, password):
     return response_payload
 
 
-def sign_up_with_supabase(email, password, email_redirect_to):
+def sign_up_with_supabase(email, password, email_redirect_to, display_name=None):
     supabase_url, publishable_key = _supabase_auth_config()
     payload = json.dumps(
         {
@@ -62,6 +62,9 @@ def sign_up_with_supabase(email, password, email_redirect_to):
             "password": password,
             "options": {
                 "email_redirect_to": email_redirect_to,
+                "data": {
+                    "display_name": display_name,
+                },
             },
         }
     ).encode("utf-8")
@@ -122,7 +125,7 @@ def load_profile(access_token, user_id):
     request_obj = Request(
         (
             f"{supabase_url}/rest/v1/profiles"
-            f"?select=id,email,role,account_status&"
+            f"?select=id,email,role,display_name,account_status&"
             f"id=eq.{quote(user_id)}"
         ),
         headers={

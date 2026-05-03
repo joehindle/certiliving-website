@@ -152,8 +152,8 @@
 .admin-login-card {
   background: #fff;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .admin-panel {
@@ -197,18 +197,19 @@
 .admin-table th,
 .admin-table td {
   text-align: left;
-  padding: 16px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 
 .admin-table th {
   color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 13px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  background: #f9fafb;
+  letter-spacing: 0.05em;
+  background: transparent;
+  border-bottom: 2px solid var(--border);
 }
 
 .admin-table tr:last-child td {
@@ -260,6 +261,16 @@
   background: #dff8ec;
 }
 
+.admin-status-pending-review {
+  color: #92400e !important;
+  background: #fef3c7;
+}
+
+.admin-status-published {
+  color: #065f46 !important;
+  background: #dff8ec;
+}
+
 .admin-status-rejected {
   color: #991b1b !important;
   background: #fee2e2;
@@ -286,35 +297,47 @@
 
 .admin-message-panel {
   display: flex;
-  gap: 18px;
-  align-items: flex-start;
-  padding: 24px;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 20px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: none;
 }
 
 .admin-message-panel h2 {
   margin: 0;
   color: var(--text);
-  font-size: 22px;
+  font-size: 16px;
   font-weight: 800;
 }
 
 .admin-message-panel p {
-  margin: 8px 0 0;
+  margin: 2px 0 0;
   color: var(--muted);
-  font-weight: 650;
-  line-height: 1.6;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .admin-message-icon {
   flex: 0 0 auto;
-  padding: 9px 12px;
+  padding: 6px 10px;
   border-radius: 999px;
   color: #065f46;
   background: #dff8ec;
-  font-size: 12px;
-  font-weight: 900;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
+}
+
+.admin-empty-panel {
+  box-shadow: none;
+  background: transparent;
+  border: 2px dashed var(--border);
 }
 
 .admin-form {

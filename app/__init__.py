@@ -69,6 +69,7 @@ def create_app(test_config=None):
         turnstile_site_key = app.config.get("TURNSTILE_SITE_KEY")
         turnstile_secret_key = app.config.get("TURNSTILE_SECRET_KEY")
         current_user_email = session.get("auth_email")
+        current_user_display_name = session.get("auth_display_name")
         current_user_roles = session.get("auth_roles") or []
         current_user_account_status = session.get("auth_account_status")
         return {
@@ -76,6 +77,7 @@ def create_app(test_config=None):
             "turnstile_site_key": turnstile_site_key,
             "turnstile_enabled": bool(turnstile_site_key and turnstile_secret_key),
             "current_user_email": current_user_email,
+            "current_user_display_name": current_user_display_name,
             "current_user_roles": current_user_roles,
             "current_user_account_status": current_user_account_status,
             "current_user_is_admin": "admin" in current_user_roles,

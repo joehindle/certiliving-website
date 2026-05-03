@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS listings (
 
     photo_url TEXT,
     supporting_photo_urls TEXT[] DEFAULT '{}'::TEXT[],
+    status TEXT NOT NULL DEFAULT 'published'
+        CHECK (status IN ('pending_review', 'published', 'rejected')),
 
     created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

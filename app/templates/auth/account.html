@@ -51,6 +51,20 @@
       </div>
     {% endif %}
 
+    {% if auth_mode == 'register' %}
+      <label class="auth-field">
+        <span>Display name</span>
+        <input
+          type="text"
+          name="display_name"
+          placeholder="Your name or company"
+          autocomplete="name"
+          maxlength="80"
+          required
+        >
+      </label>
+    {% endif %}
+
     <label class="auth-field">
       <span>Email</span>
       <input type="email" name="email" placeholder="you@example.com" autocomplete="email" required>

@@ -80,7 +80,7 @@ def detail(listing_id):
     db = get_db()
 
     listing = db.execute(
-        "SELECT * FROM listings WHERE id = %s",
+        "SELECT * FROM listings WHERE id = %s AND status = 'published'",
         (listing_id,)
     ).fetchone()
 

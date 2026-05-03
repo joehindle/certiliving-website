@@ -14,6 +14,9 @@ class LandlordFakeDB:
     def execute(self, query, params=()):
         self.calls.append((query, params))
 
+        if query.startswith("SELECT COUNT(*) AS total FROM listings WHERE owner_id = %s"):
+            return SimpleNamespace(fetchone=lambda: {"total": len(self.listings)})
+
         if query.startswith("SELECT * FROM listings WHERE owner_id = %s ORDER BY created DESC"):
             return SimpleNamespace(fetchall=lambda: self.listings)
 
@@ -28,7 +31,7 @@ class LandlordFakeDB:
                 } if self.listing else None
             )
 
-        if query.startswith("SELECT account_status FROM profiles WHERE id = %s"):
+        if query.startswith("SELECT account_status"):
             return SimpleNamespace(fetchone=lambda: None)
 
         return SimpleNamespace(fetchall=lambda: [], fetchone=lambda: self.listing)
@@ -41,6 +44,7 @@ def _login_as_landlord(client):
     with client.session_transaction() as session:
         session["auth_user_id"] = "landlord-123"
         session["auth_email"] = "landlord@example.com"
+        session["auth_display_name"] = "Test Landlord"
         session["auth_roles"] = ["landlord"]
         session["auth_account_status"] = "approved"
 
@@ -49,6 +53,7 @@ def _login_as_pending_landlord(client):
     with client.session_transaction() as session:
         session["auth_user_id"] = "landlord-123"
         session["auth_email"] = "landlord@example.com"
+        session["auth_display_name"] = "Test Landlord"
         session["auth_roles"] = ["landlord"]
         session["auth_account_status"] = "pending"
 
@@ -68,12 +73,12 @@ def test_landlord_dashboard_renders_owned_listings(client, monkeypatch, sample_l
     response = client.get("/dashboard/listings")
 
     assert response.status_code == 200
-    assert b"Your listings" in response.data
+    assert b"Hi, Test Landlord" in response.data
     assert b"Central Studios" in response.data
     assert any("WHERE owner_id = %s" in query for query, _ in fake_db.calls)
 
 
-def test_pending_landlord_sees_review_message_not_listings(client, monkeypatch):
+def test_pending_landlord_sees_review_limits(client, monkeypatch):
     _login_as_pending_landlord(client)
     fake_db = LandlordFakeDB()
     monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
@@ -81,21 +86,20 @@ def test_pending_landlord_sees_review_message_not_listings(client, monkeypatch):
     response = client.get("/dashboard/listings")
 
     assert response.status_code == 200
-    assert b"Account under review" in response.data
-    assert b"New listing" not in response.data
-    assert not any("FROM listings" in query for query, _ in fake_db.calls)
+    assert b"Account pending review" in response.data
+    assert b"submit 1 listing" in response.data
+    assert b"New listing" in response.data
 
 
-def test_pending_landlord_cannot_create_listing(client, monkeypatch):
+def test_pending_landlord_can_open_single_listing_form(client, monkeypatch):
     _login_as_pending_landlord(client)
     fake_db = LandlordFakeDB()
     monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
 
     response = client.get("/dashboard/listings/new", follow_redirects=False)
 
-    assert response.status_code == 302
-    assert "/dashboard/listings" in response.headers["Location"]
-    assert not any("FROM listings" in query for query, _ in fake_db.calls)
+    assert response.status_code == 200
+    assert b"Core details" in response.data
 
 
 def test_landlord_create_listing_sets_owner_id(client, monkeypatch):
@@ -128,7 +132,40 @@ def test_landlord_create_listing_sets_owner_id(client, monkeypatch):
         if query.startswith("INSERT INTO listings")
     ]
     assert insert_calls
-    assert insert_calls[0][-1] == "landlord-123"
+    assert insert_calls[0][-2] == "landlord-123"
+    assert insert_calls[0][-1] == "published"
+
+
+def test_pending_landlord_listing_is_submitted_for_review(client, monkeypatch):
+    _login_as_pending_landlord(client)
+    fake_db = LandlordFakeDB()
+    monkeypatch.setattr("app.routes.landlord.get_db", lambda: fake_db)
+    monkeypatch.setattr("app.routes.landlord.process_listing_images", lambda **_kwargs: (
+        "https://cdn.example.com/listings/new.webp",
+        [],
+    ))
+
+    response = client.post(
+        "/dashboard/listings/new",
+        data=MultiDict([
+            ("title", "Review Listing"),
+            ("city", "Leeds"),
+            ("rent_pcm", "725"),
+            ("room_type", "Studio"),
+            ("description", "Fresh listing"),
+            ("cover_photo_file", (BytesIO(b"cover"), "cover.webp")),
+        ]),
+        content_type="multipart/form-data",
+        follow_redirects=False,
+    )
+
+    assert response.status_code == 302
+    insert_calls = [
+        params for query, params in fake_db.calls
+        if query.startswith("INSERT INTO listings")
+    ]
+    assert insert_calls
+    assert insert_calls[0][-1] == "pending_review"
 
 
 def test_landlord_create_listing_blocks_honeypot_submission(client, monkeypatch):

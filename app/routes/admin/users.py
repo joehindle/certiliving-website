@@ -32,6 +32,14 @@ def register_routes(bp, admin_required, admin_tabs):
             "UPDATE profiles SET account_status = %s WHERE id = %s",
             (account_status, user_id),
         )
+        
+        # System automatically publishes that pending listing
+        if account_status == "approved":
+            db.execute(
+                "UPDATE listings SET status = 'published' WHERE owner_id = %s AND status = 'pending_review'",
+                (user_id,)
+            )
+            
         db.commit()
         flash("Account status updated.", "success")
         return redirect(url_for("admin.users_index"))

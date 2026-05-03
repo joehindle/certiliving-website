@@ -93,7 +93,7 @@ def test_register_without_immediate_user_record_redirects_to_login(client, monke
     monkeypatch.setattr("app.routes.auth.verify_protected_form", lambda *_args, **_kwargs: (True, None))
     monkeypatch.setattr(
         "app.routes.auth.sign_up_with_supabase",
-        lambda email, password, email_redirect_to: {
+        lambda email, password, email_redirect_to, display_name=None: {
             "access_token": None,
             "user": None,
         },
@@ -103,6 +103,7 @@ def test_register_without_immediate_user_record_redirects_to_login(client, monke
         "/account",
         data={
             "mode": "register",
+            "display_name": "New Landlord",
             "email": "new@example.com",
             "password": "password123",
             "confirm_password": "password123",
@@ -119,7 +120,7 @@ def test_register_existing_account_redirects_to_login_with_info(client, monkeypa
     monkeypatch.setattr("app.routes.auth.verify_protected_form", lambda *_args, **_kwargs: (True, None))
     monkeypatch.setattr(
         "app.routes.auth.sign_up_with_supabase",
-        lambda email, password, email_redirect_to: {
+        lambda email, password, email_redirect_to, display_name=None: {
             "existing_account": True,
             "user": {"id": "existing-user", "identities": []},
         },
@@ -129,6 +130,7 @@ def test_register_existing_account_redirects_to_login_with_info(client, monkeypa
         "/account",
         data={
             "mode": "register",
+            "display_name": "Existing Landlord",
             "email": "existing@example.com",
             "password": "password123",
             "confirm_password": "password123",

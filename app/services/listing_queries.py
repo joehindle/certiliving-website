@@ -3,7 +3,7 @@ SIMILAR_LISTINGS_LIMIT = 6
 
 def get_highlighted_listings(db, limit=SIMILAR_LISTINGS_LIMIT):
     return db.execute(
-        "SELECT * FROM listings ORDER BY created DESC LIMIT %s",
+        "SELECT * FROM listings WHERE status = 'published' ORDER BY created DESC LIMIT %s",
         (limit,),
     ).fetchall()
 
@@ -13,7 +13,7 @@ def get_similar_listings(db, listing, limit=SIMILAR_LISTINGS_LIMIT):
         """
         SELECT *
         FROM listings
-        WHERE id != %s AND city = %s
+        WHERE id != %s AND city = %s AND status = 'published'
         ORDER BY ABS(rent_pcm - %s) ASC, created DESC
         LIMIT %s
         """,
@@ -31,7 +31,7 @@ def get_similar_listings(db, listing, limit=SIMILAR_LISTINGS_LIMIT):
         f"""
         SELECT *
         FROM listings
-        WHERE id NOT IN ({placeholders})
+        WHERE id NOT IN ({placeholders}) AND status = 'published'
         ORDER BY created DESC
         LIMIT %s
         """,

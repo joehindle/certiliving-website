@@ -61,7 +61,7 @@ def _build_filter_state(args):
 
 
 def _build_where_clause(state):
-    where_clauses = []
+    where_clauses = ["status = 'published'"]
     params = []
     if state["city"]:
         where_clauses.append("city = %s")
@@ -78,9 +78,7 @@ def _build_where_clause(state):
         where_clauses.append("rent_pcm <= %s")
         params.append(state["max_rent"])
 
-    where_sql = ""
-    if where_clauses:
-        where_sql = " WHERE " + " AND ".join(where_clauses)
+    where_sql = " WHERE " + " AND ".join(where_clauses)
     return where_sql, params
 
 
@@ -157,10 +155,10 @@ def get_filtered_listings_context(db, args):
     listings = db.execute(query, (*params, state["per_page"], offset)).fetchall()
 
     city_options = db.execute(
-        "SELECT DISTINCT city FROM listings WHERE city IS NOT NULL AND city != '' ORDER BY city ASC"
+        "SELECT DISTINCT city FROM listings WHERE status = 'published' AND city IS NOT NULL AND city != '' ORDER BY city ASC"
     ).fetchall()
     room_type_options = db.execute(
-        "SELECT DISTINCT room_type FROM listings WHERE room_type IS NOT NULL AND room_type != '' ORDER BY room_type ASC"
+        "SELECT DISTINCT room_type FROM listings WHERE status = 'published' AND room_type IS NOT NULL AND room_type != '' ORDER BY room_type ASC"
     ).fetchall()
 
     filters = {

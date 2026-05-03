@@ -9,10 +9,10 @@
       <p class="admin-subtitle">{{ dashboard_subtitle if dashboard_subtitle is defined else 'Manage the homes shown on the public site.' }}</p>
     </div>
     <div class="admin-actions">
-      {% if new_listing_url is not defined or new_listing_url %}
+      {% if listings and (new_listing_url is not defined or new_listing_url) %}
       <a class="admin-button admin-button-primary" href="{{ new_listing_url if new_listing_url is defined else url_for('admin.listings_new') }}">New listing</a>
       {% endif %}
-      <form method="post" action="{{ url_for('admin.logout') }}">
+      <form method="post" action="{{ url_for('auth.logout') }}" style="margin: 0;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button class="admin-button admin-button-secondary" type="submit">Logout</button>
       </form>
@@ -20,6 +20,22 @@
   </div>
 
   {% include "admin/_tabs.html" %}
+
+  {% if limit_title is defined %}
+  <div class="admin-panel admin-message-panel">
+    <div class="admin-message-icon">{{ account_status|default('active')|capitalize }}</div>
+    <div>
+      <h2>{{ limit_title }}</h2>
+      <p>{{ limit_copy }}</p>
+      {% if listing_limit is not none %}
+        <p class="admin-hint">
+          Listing allowance: {{ listing_count }} / {{ listing_limit }}
+          {% if listing_remaining is defined %}({{ listing_remaining }} remaining){% endif %}
+        </p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
 
   {% if account_pending is defined and account_pending %}
   <div class="admin-panel admin-message-panel">
@@ -31,60 +47,101 @@
     </div>
   </div>
   {% else %}
-  <div class="admin-panel">
-    <div class="admin-panel-header">
-      <div>
-        <h2>{{ dashboard_listing_heading if dashboard_listing_heading is defined else 'Published listings' }}</h2>
-        <p>{{ listings|length }} listing{{ '' if listings|length == 1 else 's' }} in the dashboard</p>
+    {% if not listings %}
+    <div class="admin-panel admin-empty-panel">
+      <div class="admin-empty">
+        <h2>{{ dashboard_empty_title if dashboard_empty_title is defined else 'No listings yet' }}</h2>
+        <p>{{ dashboard_empty_copy if dashboard_empty_copy is defined else 'Create your first listing to start showing accommodation on the public site.' }}</p>
+        {% if new_listing_url is not defined or new_listing_url %}
+        <a class="admin-button admin-button-primary" href="{{ new_listing_url if new_listing_url is defined else url_for('admin.listings_new') }}">Create listing</a>
+        {% endif %}
       </div>
     </div>
-
-    {% if listings %}
-    <div class="admin-table-wrap">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>City</th>
-            <th>Rent</th>
-            <th>Room</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for l in listings %}
-          <tr>
-            <td>
-              <strong>{{ l['title'] }}</strong>
-              {% if l['available_from'] %}
-              <span>Available {{ l['available_from'] }}</span>
-              {% endif %}
-            </td>
-            <td>{{ l['city'] }}</td>
-            <td>&pound;{{ l['rent_pcm'] }} PCM</td>
-            <td>{{ l['room_type'] if l['room_type'] else 'N/A' }}</td>
-            <td class="admin-row-actions">
-              <a class="admin-link-button" href="{{ url_for(edit_endpoint if edit_endpoint is defined else 'admin.listings_edit', listing_id=l['id']) }}">Edit</a>
-              <form method="post" action="{{ url_for(delete_endpoint if delete_endpoint is defined else 'admin.listings_delete', listing_id=l['id']) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <button class="admin-danger-button" type="submit" onclick="return confirm('Delete this listing?')">Delete</button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
     {% else %}
-    <div class="admin-empty">
-      <h2>{{ dashboard_empty_title if dashboard_empty_title is defined else 'No listings yet' }}</h2>
-      <p>{{ dashboard_empty_copy if dashboard_empty_copy is defined else 'Create your first listing to start showing accommodation on the public site.' }}</p>
-      {% if new_listing_url is not defined or new_listing_url %}
-      <a class="admin-button admin-button-primary" href="{{ new_listing_url if new_listing_url is defined else url_for('admin.listings_new') }}">Create listing</a>
-      {% endif %}
+    <div class="admin-panel">
+      <div class="admin-panel-header">
+        <div>
+          <h2>{{ dashboard_listing_heading if dashboard_listing_heading is defined else 'Published listings' }}</h2>
+          <p>{{ listings|length }} listing{{ '' if listings|length == 1 else 's' }} in the dashboard</p>
+        </div>
+        {% if is_admin_dashboard and owners %}
+        <div>
+          <form method="get" action="{{ url_for('admin.listings_index') }}" class="admin-inline-form">
+            <select name="owner_id" onchange="this.form.submit()" aria-label="Filter by owner">
+              <option value="">All Owners</option>
+              {% for owner in owners %}
+              <option value="{{ owner['id'] }}" {% if current_owner_filter == owner['id']|string %}selected{% endif %}>
+                {{ owner['display_name'] }}
+              </option>
+              {% endfor %}
+            </select>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>City</th>
+              <th>Rent</th>
+              <th>Room</th>
+              {% if is_admin_dashboard %}
+              <th>Owner</th>
+              {% endif %}
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in listings %}
+            <tr>
+              <td>
+                <strong>{{ l['title'] }}</strong>
+                {% if l['available_from'] %}
+                <span>Available {{ l['available_from'] }}</span>
+                {% endif %}
+              </td>
+              <td>{{ l['city'] }}</td>
+              <td>&pound;{{ l['rent_pcm'] }} PCM</td>
+              <td>{{ l['room_type'] if l['room_type'] else 'N/A' }}</td>
+              {% if is_admin_dashboard %}
+              <td>{{ l['owner_display_name'] if l['owner_display_name'] else '' }}</td>
+              {% endif %}
+              <td>
+                {% set listing_status = l['status'] if l['status'] is defined and l['status'] else 'published' %}
+                {% if listing_status_endpoint is defined %}
+                <form class="admin-inline-form" method="post" action="{{ url_for(listing_status_endpoint, listing_id=l['id']) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <select name="status" aria-label="Listing status">
+                    <option value="pending_review" {% if listing_status == 'pending_review' %}selected{% endif %}>Pending review</option>
+                    <option value="published" {% if listing_status == 'published' %}selected{% endif %}>Published</option>
+                    <option value="rejected" {% if listing_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                  </select>
+                  <button class="admin-link-button" type="submit">Update</button>
+                </form>
+                {% else %}
+                  <span class="admin-status-pill admin-status-{{ listing_status|replace('_', '-') }}">
+                    {{ listing_status|replace('_', ' ')|title }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="admin-row-actions">
+                <a class="admin-link-button" href="{{ url_for(edit_endpoint if edit_endpoint is defined else 'admin.listings_edit', listing_id=l['id']) }}">Edit</a>
+                <form method="post" action="{{ url_for(delete_endpoint if delete_endpoint is defined else 'admin.listings_delete', listing_id=l['id']) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                  <button class="admin-danger-button" type="submit" onclick="return confirm('Delete this listing?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
     {% endif %}
-  </div>
   {% endif %}
 </div>
 

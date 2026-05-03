@@ -117,6 +117,7 @@ def _start_authenticated_session(user, profile):
     session["auth_provider"] = "supabase"
     session["auth_user_id"] = user.get("id")
     session["auth_email"] = (profile.get("email") or user.get("email") or "").strip().lower()
+    session["auth_display_name"] = (profile.get("display_name") or "").strip()
     session["auth_roles"] = _normalize_profile_roles(profile)
     session["auth_account_status"] = (
         profile.get("account_status") or "pending"
@@ -135,6 +136,7 @@ def account():
         email = (request.form.get("email") or "").strip().lower()
         password = request.form.get("password") or ""
         confirm_password = request.form.get("confirm_password") or ""
+        display_name = (request.form.get("display_name") or "").strip()
 
         is_valid_submission, security_error = verify_protected_form(
             request.form,
@@ -150,12 +152,17 @@ def account():
             flash("Passwords do not match.", "error")
         elif mode == "register" and len(password) < 8:
             flash("Password must be at least 8 characters.", "error")
+        elif mode == "register" and not display_name:
+            flash("Display name is required.", "error")
+        elif mode == "register" and len(display_name) > 80:
+            flash("Display name is too long.", "error")
         elif mode == "register":
             try:
                 auth_result = sign_up_with_supabase(
                     email,
                     password,
                     email_redirect_to=request.host_url.rstrip("/"),
+                    display_name=display_name,
                 )
             except ValueError as exc:
                 time.sleep(0.8)
