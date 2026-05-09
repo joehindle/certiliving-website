@@ -363,10 +363,27 @@ main { flex: 1; }
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.listing-card-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 .listing-card:hover {
   transform: translateY(-6px);
   box-shadow: var(--shadow);
   border-color: var(--border-strong);
+}
+
+.listing-card-link:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.45);
+  outline-offset: 3px;
+}
+
+.listing-body a {
+  text-decoration: none;
+  color: inherit;
 }
 
 .image-wrapper { 
@@ -409,11 +426,6 @@ main { flex: 1; }
 }
 
 .listing-body { padding: 20px; }
-
-.listing-body a {
-  text-decoration: none;
-  color: inherit;
-}
 
 .listing-card h3 {
   margin: 0 0 8px;

@@ -73,7 +73,7 @@
     {% if highlighted_listings %}
     <div class="listing-grid featured-grid">
         {% for listing in highlighted_listings %}
-        <div class="listing-card">
+        <a class="listing-card listing-card-link" href="{{ url_for('listings.detail', listing_id=listing['id']) }}">
             <div class="image-wrapper">
                 <img class="listing-image"
                      src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}"
@@ -87,9 +87,7 @@
             </div>
 
             <div class="listing-body">
-                <a href="{{ url_for('listings.detail', listing_id=listing['id']) }}">
-                    <h3>{{ listing['title'] }}</h3>
-                </a>
+                <h3>{{ listing['title'] }}</h3>
 
                 <p class="city">{{ listing['city'] }}</p>
 
@@ -109,7 +107,7 @@
                     {% endif %}
                 </div>
             </div>
-        </div>
+        </a>
         {% endfor %}
     </div>
     <a href="{{ url_for('listings.all_listings') }}" class="btn-primary">View All Listings</a>
