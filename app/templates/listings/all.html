@@ -75,7 +75,7 @@
     {% if listings %}
     <div class="listing-grid">
       {% for listing in listings %}
-      <div class="listing-card">
+      <a class="listing-card listing-card-link" href="{{ url_for('listings.detail', listing_id=listing['id']) }}">
         <div class="image-wrapper">
           <img class="listing-image"
                src="{{ listing['photo_url'] if listing['photo_url'] else 'https://via.placeholder.com/400x250' }}"
@@ -85,9 +85,7 @@
         </div>
 
         <div class="listing-body">
-          <a href="{{ url_for('listings.detail', listing_id=listing['id']) }}">
-            <h3>{{ listing['title'] }}</h3>
-          </a>
+          <h3>{{ listing['title'] }}</h3>
           <p class="city">{{ listing['city'] }}</p>
           <div class="badge-row">
             {% if listing['room_type'] %}
@@ -101,7 +99,7 @@
             {% endif %}
           </div>
         </div>
-      </div>
+      </a>
       {% endfor %}
     </div>
 
